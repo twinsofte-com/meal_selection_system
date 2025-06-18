@@ -1,0 +1,320 @@
+/* General Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #e9ecef;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Header Styles */
+header {
+    background: #343a40;
+    color: #fff;
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+header nav {
+    display: flex;
+    gap: 1rem;
+}
+
+header nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+header nav a:hover {
+    color: #ffc107;
+}
+
+/* Main Content Styles */
+main {
+    padding: 2rem 1rem;
+    margin-top: 5rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Search Box Styles */
+.search-box {
+    margin: 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-box form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-box input {
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    flex: 1;
+}
+
+.search-box button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.search-box button:hover {
+    background-color: #0056b3;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 1rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+th, td {
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 700;
+}
+
+td a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+td a:hover {
+    color: #0056b3;
+}
+
+.qr-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+}
+
+/* Popup Styles */
+#scanner {
+    text-align: center;
+}
+
+#reader {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.popup-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.popup-content button {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.popup-content button:hover {
+    background-color: #0056b3;
+}
+
+#download-qr ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#download-qr ul li {
+    margin: 0.5rem 0;
+}
+
+/* Styling for the camera switch button */
+#toggleCameraButton {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#toggleCameraButton::before {
+    content: "\f030";
+    font-family: FontAwesome;
+    font-size: 18px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+}
+
+#toggleCameraButton:hover::before {
+    opacity: 0.7; /* Change icon opacity on hover */
+}
+
+#toggleCameraButton:hover {
+    background-color: #218838;
+    transform: scale(1.1); /* Scale up the button on hover */
+}
+
+
+/* Responsive Styles */
+@media only screen and (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header nav {
+        margin-top: 1rem;
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    #reader {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .search-box {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .search-box form {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-box input, .search-box button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    table {
+        font-size: 0.875rem;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    #toggleCameraButton {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+    }
+
+    .popup-content {
+        padding: 1rem;
+        width: 90%;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    header .container {
+        padding: 0 0.5rem;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .container {
+        padding: 0 0.5rem;
+    }
+
+    #reader {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    #toggleCameraButton {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+
+    .popup-content {
+        padding: 1rem;
+        width: 90%;
+    }
+}
