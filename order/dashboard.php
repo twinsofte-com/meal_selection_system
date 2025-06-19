@@ -78,30 +78,34 @@
         <form action="order_process.php" method="POST" id="orderForm" class="hidden">
           <input type="hidden" name="staff_id" id="staff_id">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="meal-box">
-                <input type="checkbox" id="meal_breakfast" name="meals[]" value="1" class="meal-checkbox">
-                <label for="meal_breakfast" class="meal-label">
-                  <p class="text-gray-600 font-semibold"><?= date("D d M") ?> <span class="text-sm block">හෙට</span></p>
-                  <h3 class="text-xl mt-2">BREAKFAST<br><span class="text-sm">උදේ</span></h3>
-                </label>
-              </div>
+    <!-- Lunch (Today) -->
+    <div class="meal-box">
+      <input type="checkbox" id="meal_lunch" name="meals[]" value="2" class="meal-checkbox">
+      <label for="meal_lunch" class="meal-label">
+        <p class="text-gray-600 font-semibold"><?= date("D d M") ?> <span class="text-sm block">අද</span></p>
+        <h3 class="text-xl mt-2">LUNCH<br><span class="text-sm">දහවල්</span></h3>
+      </label>
+    </div>
 
-              <div class="meal-box">
-                <input type="checkbox" id="meal_lunch" name="meals[]" value="2" class="meal-checkbox">
-                <label for="meal_lunch" class="meal-label">
-                  <p class="text-gray-600 font-semibold"><?= date("D d M") ?> <span class="text-sm block">අද</span></p>
-                  <h3 class="text-xl mt-2">LUNCH<br><span class="text-sm">දහවල්</span></h3>
-                </label>
-              </div>
+    <!-- Dinner (Today) -->
+    <div class="meal-box">
+      <input type="checkbox" id="meal_dinner" name="meals[]" value="3" class="meal-checkbox">
+      <label for="meal_dinner" class="meal-label">
+        <p class="text-gray-600 font-semibold"><?= date("D d M") ?> <span class="text-sm block">අද</span></p>
+        <h3 class="text-xl mt-2">DINNER<br><span class="text-sm">රාත්‍රී</span></h3>
+      </label>
+    </div>
 
-              <div class="meal-box">
-                <input type="checkbox" id="meal_dinner" name="meals[]" value="3" class="meal-checkbox">
-                <label for="meal_dinner" class="meal-label">
-                  <p class="text-gray-600 font-semibold"><?= date("D d M") ?> <span class="text-sm block">අද</span></p>
-                  <h3 class="text-xl mt-2">DINNER<br><span class="text-sm">රාත්‍රී</span></h3>
-                </label>
-              </div>
-          </div>
+    <!-- Breakfast (Tomorrow) -->
+    <div class="meal-box">
+      <input type="checkbox" id="meal_breakfast" name="meals[]" value="1" class="meal-checkbox">
+      <label for="meal_breakfast" class="meal-label">
+        <p class="text-gray-600 font-semibold"><?= date("D d M", strtotime("+1 day")) ?> <span class="text-sm block">හෙට</span></p>
+        <h3 class="text-xl mt-2">BREAKFAST<br><span class="text-sm">උදේ</span></h3>
+      </label>
+    </div>
+</div>
+
           <div class="mt-6 space-y-4">
               <label class="inline-flex items-center">
                   <input type="radio" name="meal_option" value="egg" class="form-radio text-yellow-500 w-5 h-5" required>
@@ -187,6 +191,7 @@
           document.getElementById("empName").innerText = data.name;
           document.getElementById("employee-info").classList.remove("hidden");
           document.getElementById("orderForm").classList.remove("hidden");
+          document.getElementById("reset-btn").classList.remove("hidden");
 
           checkMealPreference(data.staff_id);
         } else {

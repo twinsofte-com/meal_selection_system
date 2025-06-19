@@ -7,6 +7,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 require_once 'db.php';
 require_once '../fpdf/fpdf.php';  // Make sure the FPDF library is included
+include_once 'include/date.php';
 
 // Check for selected date or use today's date
 $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');

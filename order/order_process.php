@@ -72,9 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Insert
         $stmt_insert = $conn->prepare("
-            INSERT INTO staff_meals (staff_id, meal_date, breakfast, lunch, dinner, egg, chicken, vegetarian, date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            INSERT INTO staff_meals 
+            (staff_id, meal_date, breakfast, lunch, dinner, egg, chicken, vegetarian, date, breakfast_received, lunch_received, dinner_received) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0, 0, 0)
         ");
+
 
         if (!$stmt_insert) {
             die("Prepare failed (insert): " . $conn->error);

@@ -1,3 +1,6 @@
+<?php
+date_default_timezone_set('Asia/Colombo');
+?>
 <!-- include/topbar.php -->
 <div class="w-full bg-white border-b shadow p-4 flex items-center justify-between">
   <!-- Left: Logo and Title -->

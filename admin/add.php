@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+include_once 'include/date.php';
 
 $username = 'admin';
 $password = password_hash('password123', PASSWORD_BCRYPT);

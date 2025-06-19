@@ -1,6 +1,7 @@
 <?php
 require_once 'db.php';
 require_once  '../fpdf/fpdf.php'; // Ensure the path to FPDF is correct
+include_once 'include/date.php';
 
 $date = $_GET['date'] ?? date(format: 'Y-m-d'); // Set the date for today's report
 

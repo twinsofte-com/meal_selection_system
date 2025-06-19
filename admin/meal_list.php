@@ -6,6 +6,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 }
 
 require_once 'db.php';
+include_once 'include/date.php';
 
 // Check for submitted date or use today
 $selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');

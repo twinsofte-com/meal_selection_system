@@ -1,6 +1,7 @@
 <?php
 include_once '../phpqrcode/qrlib.php';
 require_once 'db.php';
+include_once 'include/date.php';
 
 // Get meal counts for Lunch and Dinner
 $lunch_count_query = "SELECT COUNT(*) AS lunch_count FROM meal_issuance WHERE meal_type = 'Lunch' AND confirmed = 1 AND meal_date = CURDATE()";

@@ -1,6 +1,7 @@
 <?php
 require_once '../phpqrcode/qrlib.php';
 require_once 'db.php';
+include_once 'include/date.php';
 
 $message = "";
 

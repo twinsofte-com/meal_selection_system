@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'db.php';
+include_once 'include/date.php';
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];

@@ -1,5 +1,6 @@
 <?php
 require_once 'db.php';
+include_once 'include/date.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = intval($_POST['id']);
