@@ -1,5 +1,5 @@
 <?php
-date_default_timezone_set('Asia/Colombo');
+include_once '../admin/include/date.php';
 require '../admin/db.php';
 header('Content-Type: application/json');
 

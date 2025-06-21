@@ -1,6 +1,7 @@
 <?php
 require_once '../admin/db.php';
 require_once '../fpdf/fpdf.php'; // Ensure this path is correct
+include_once '../admin/include/date.php';
 
 $date = date('Y-m-d'); // Use today's date or modify as needed
 

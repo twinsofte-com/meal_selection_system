@@ -18,12 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Determine which meals were selected
+    // Default manual_order = 0 (since this is manual order page)
+    $manual_order = 0;
+
+    // Determine selected meals
     $breakfast = in_array("1", $meals) ? 1 : 0;
     $lunch     = in_array("2", $meals) ? 1 : 0;
     $dinner    = in_array("3", $meals) ? 1 : 0;
 
-    // Only apply meal options if Lunch is selected
+    // Meal options (only for lunch)
     $egg = $chicken = $vegetarian = 0;
     if ($lunch) {
         $egg        = $meal_option === 'egg' ? 1 : 0;
@@ -31,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vegetarian = $meal_option === 'vegetarian' ? 1 : 0;
     }
 
-    // Get internal staff DB ID
+    // Get internal staff ID
     $stmt = $conn->prepare("SELECT id FROM staff WHERE staff_id = ?");
     $stmt->bind_param("s", $staff_code);
     $stmt->execute();
@@ -45,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $staff_row = $staff_result->fetch_assoc();
     $staff_id = $staff_row['id'];
 
-    // --- LUNCH & DINNER for TODAY ---
+    // --- TODAY: Lunch & Dinner ---
     if ($lunch || $dinner) {
         $stmt_check_today = $conn->prepare("SELECT id FROM staff_meals WHERE staff_id = ? AND meal_date = ?");
         $stmt_check_today->bind_param("is", $staff_id, $today);
@@ -55,19 +58,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result_today->num_rows > 0) {
             $stmt_update = $conn->prepare("
                 UPDATE staff_meals 
-                SET lunch = ?, dinner = ?, egg = ?, chicken = ?, vegetarian = ?, date = NOW(), manual_order = 1
+                SET lunch = ?, dinner = ?, egg = ?, chicken = ?, vegetarian = ?, date = NOW(), manual_order = ?
                 WHERE staff_id = ? AND meal_date = ?
             ");
-            $stmt_update->bind_param("iiiiiis", $lunch, $dinner, $egg, $chicken, $vegetarian, $staff_id, $today);
+            $stmt_update->bind_param("iiiiiiis", $lunch, $dinner, $egg, $chicken, $vegetarian, $manual_order, $staff_id, $today);
             $stmt_update->execute();
             $stmt_update->close();
         } else {
             $stmt_insert = $conn->prepare("
                 INSERT INTO staff_meals 
                 (staff_id, meal_date, lunch, dinner, egg, chicken, vegetarian, date, manual_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 1)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
             ");
-            $stmt_insert->bind_param("isiiiii", $staff_id, $today, $lunch, $dinner, $egg, $chicken, $vegetarian);
+            $stmt_insert->bind_param("isiiiiii", $staff_id, $today, $lunch, $dinner, $egg, $chicken, $vegetarian, $manual_order);
             $stmt_insert->execute();
             $stmt_insert->close();
         }
@@ -75,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_check_today->close();
     }
 
-    // --- BREAKFAST for TOMORROW ---
+    // --- TOMORROW: Breakfast ---
     if ($breakfast) {
         $stmt_check_tomorrow = $conn->prepare("SELECT id FROM staff_meals WHERE staff_id = ? AND meal_date = ?");
         $stmt_check_tomorrow->bind_param("is", $staff_id, $tomorrow);
@@ -85,19 +88,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result_tomorrow->num_rows > 0) {
             $stmt_update = $conn->prepare("
                 UPDATE staff_meals 
-                SET breakfast = 1, date = NOW(), manual_order = 1
+                SET breakfast = 1, date = NOW(), manual_order = ?
                 WHERE staff_id = ? AND meal_date = ?
             ");
-            $stmt_update->bind_param("is", $staff_id, $tomorrow);
+            $stmt_update->bind_param("iis", $manual_order, $staff_id, $tomorrow);
             $stmt_update->execute();
             $stmt_update->close();
         } else {
             $stmt_insert = $conn->prepare("
                 INSERT INTO staff_meals 
                 (staff_id, meal_date, breakfast, date, manual_order)
-                VALUES (?, ?, 1, NOW(), 1)
+                VALUES (?, ?, 1, NOW(), ?)
             ");
-            $stmt_insert->bind_param("is", $staff_id, $tomorrow);
+            $stmt_insert->bind_param("isi", $staff_id, $tomorrow, $manual_order);
             $stmt_insert->execute();
             $stmt_insert->close();
         }
@@ -110,4 +113,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $conn->close();
-?>

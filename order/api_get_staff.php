@@ -1,5 +1,6 @@
 <?php
 require_once '../admin/db.php';
+include_once '../admin/include/date.php';
 
 header('Content-Type: application/json');
 

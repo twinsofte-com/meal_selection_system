@@ -1,10 +1,11 @@
 <?php
-date_default_timezone_set('Asia/Colombo');  
+include_once '../admin/include/date.php';
 require '../admin/db.php';
 session_start();
 if (!isset($_SESSION['order_user'])) exit;
+
 $type = $_GET['type'] ?? '';
-$today = date('Y-m-d');
+$meal_date = date('Y-m-d', strtotime('-1 day')); // yesterday
 $list = [];
 
 switch($type){
@@ -13,31 +14,30 @@ switch($type){
                    IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.breakfast_received = 1 AND staff_meals.meal_date = '$today'";
+            WHERE staff_meals.breakfast_received = 1 AND staff_meals.meal_date = '$meal_date'";
     break;
-
 
   case 'manual':
     $sql = "SELECT staff.staff_id, staff.name,
                    IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.manual_order = 1 AND staff_meals.meal_date = '$today' AND staff_meals.breakfast_received = 1";
+            WHERE staff_meals.manual_order = 1 AND staff_meals.breakfast_received = 1 AND staff_meals.meal_date = '$meal_date'";
     break;
 
   case 'pending':
     $sql = "SELECT staff.staff_id, staff.name, staff_meals.manual_order
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.breakfast = 1 AND staff_meals.breakfast_received = 0 AND staff_meals.meal_date = '$today'";
+            WHERE staff_meals.breakfast = 1 AND staff_meals.breakfast_received = 0 AND staff_meals.meal_date = '$meal_date'";
     break;
 
-  case 'extra': // Manual Pending Requests
+  case 'extra':
     $sql = "SELECT staff.staff_id, staff.name,
                    IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.meal_date = '$today' AND staff_meals.breakfast = 1 AND staff_meals.manual_order = 1";
+            WHERE staff_meals.meal_date = '$meal_date' AND staff_meals.breakfast = 1 AND staff_meals.manual_order = 1";
     break;
 
   default:

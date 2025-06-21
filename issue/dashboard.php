@@ -4,12 +4,10 @@ if (!isset($_SESSION['issue_user'])) {
     header("Location: issue_login.php");
     exit;
 }
-
-date_default_timezone_set('Asia/Colombo');
+include_once '../admin/include/date.php';
 
 $todayDate = date("Y-m-d");
 $dayOfWeek = date("l");
-$currentTime = date("h:i A");
 
 // Sinhala day names
 $sinhalaDays = [
@@ -30,7 +28,7 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
 <head>
   <meta charset="UTF-8">
   <title>Meal Issue Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     :root {
@@ -47,63 +45,77 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
       cursor: pointer;
     }
 
-    .footer-text {
-      font-size: 0.95rem;
+    .footer-fixed {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: #f3f4f6;
+      border-top: 1px solid #d1d5db;
+      padding: 6px 0;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #374151;
+      z-index: 50;
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col justify-between">
+<body class="bg-gray-100 flex flex-col min-h-screen">
 
   <!-- Header -->
-  <header class="bg-white shadow py-4 px-6 flex justify-between items-center">
-    <div class="text-xl font-bold text-[--primary-blue]">ECW</div>
+  <header class="bg-white shadow py-3 px-4 flex justify-between items-center">
+    <div class="text-lg font-bold text-[--primary-blue]">ECW</div>
     <a href="logout.php"
-       class="bg-[--purple] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-800">
+       class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-blue-800">
       Logout
     </a>
   </header>
 
-  <!-- Main Content -->
-  <main class="px-6 py-8 max-w-5xl mx-auto flex-grow">
+  <!-- Content Wrapper -->
+  <main class="flex-grow px-4 pt-6 pb-24 max-w-5xl mx-auto w-full">
     <!-- Titles -->
-    <div class="text-center mb-10">
+    <div class="text-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800">MEAL ISSUE</h1>
-      <h2 class="text-xl text-gray-600 mt-1">ඞිකුත් කිරීම</h2>
+      <h2 class="text-lg text-gray-600 mt-1">ඞිකුත් කිරීම</h2>
+      <p class="text-sm text-gray-500 mt-1"><?= $todayDate ?> (<?= $sinhalaDate ?>)</p>
     </div>
 
     <!-- Meal Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Breakfast -->
-      <div onclick="location.href='breakfast/issue_breakfast.php'" class="bg-white border-l-8 border-yellow-400 shadow p-6 rounded-xl transition transform touch-card card-hover">
-        <div class="text-sm text-gray-500"><?= $todayDate ?> (<?= $dayOfWeek ?>)</div>
-        <h3 class="text-2xl font-bold text-yellow-600 mt-2">Breakfast</h3>
+      <div onclick="location.href='breakfast/issue_breakfast.php'" class="bg-white border-l-8 border-yellow-400 shadow p-5 rounded-xl transition transform touch-card card-hover">
+        <h3 class="text-2xl font-bold text-yellow-600">🍳 Breakfast</h3>
         <p class="text-gray-600 text-lg">උදේ</p>
       </div>
 
       <!-- Lunch -->
-      <div onclick="location.href='issue_lunch.php'" class="bg-white border-l-8 border-green-500 shadow p-6 rounded-xl transition transform touch-card card-hover">
-        <div class="text-sm text-gray-500"><?= $todayDate ?> (<?= $dayOfWeek ?>)</div>
-        <h3 class="text-2xl font-bold text-green-600 mt-2">Lunch</h3>
+      <div onclick="location.href='issue_lunch.php'" class="bg-white border-l-8 border-green-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
+        <h3 class="text-2xl font-bold text-green-600">🍛 Lunch</h3>
         <p class="text-gray-600 text-lg">දවල්</p>
       </div>
 
       <!-- Dinner -->
-      <div onclick="location.href='issue_dinner.php'" class="bg-white border-l-8 border-blue-500 shadow p-6 rounded-xl transition transform touch-card card-hover">
-        <div class="text-sm text-gray-500"><?= $todayDate ?> (<?= $dayOfWeek ?>)</div>
-        <h3 class="text-2xl font-bold text-blue-600 mt-2">Dinner</h3>
+      <div onclick="location.href='issue_dinner.php'" class="bg-white border-l-8 border-blue-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
+        <h3 class="text-2xl font-bold text-blue-600">🍽️ Dinner</h3>
         <p class="text-gray-600 text-lg">රෑ</p>
       </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white text-center py-4 shadow-inner">
-    <div class="footer-text text-gray-700">
-      <p>Date: <?= $todayDate ?> | දිනය: <?= $sinhalaDate ?></p>
-      <p>Time: <?= $currentTime ?></p>
-    </div>
-    <?php include('include/footer.php'); ?>
-  </footer>
+  <?php include 'include/footer.php'; ?>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-GB');
+      const date = now.toLocaleDateString('en-GB', {
+        weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
+      });
+      document.getElementById('live-clock').textContent = `${date} - ${time}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 
 </body>
 </html>

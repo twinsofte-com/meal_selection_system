@@ -1,9 +1,8 @@
 <?php
-date_default_timezone_set('Asia/Colombo');
+include_once '../../admin/include/date.php';
 require '../../admin/db.php';
 session_start();
 
-// Redirect if not logged in
 if (!isset($_SESSION['order_user'])) {
     header('Location: ../order_login.php');
     exit;
@@ -11,70 +10,51 @@ if (!isset($_SESSION['order_user'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
     $staff_id = trim($_POST['staff_id']);
-    $today = date('Y-m-d');
+    $breakfast_date = date('Y-m-d', strtotime('-1 day')); // yesterday
 
-    // Step 1: Check if staff exists
-    $stmt = $conn->prepare("SELECT id FROM staff WHERE staff_id = ?");
+    // Check if staff is registered
+    $stmt = $conn->prepare("SELECT id, name FROM staff WHERE staff_id = ?");
     $stmt->bind_param("s", $staff_id);
     $stmt->execute();
     $result = $stmt->get_result();
-
+    
     if ($staff = $result->fetch_assoc()) {
+        // Registered staff, get their ID
         $staff_table_id = $staff['id'];
-
-        // Step 2: Check if meal record exists
-        $check = $conn->prepare("SELECT breakfast, breakfast_received FROM staff_meals WHERE staff_id = ? AND meal_date = ?");
-        $check->bind_param("is", $staff_table_id, $today);
-        $check->execute();
-        $meal_result = $check->get_result();
-
-        if ($meal = $meal_result->fetch_assoc()) {
-
-            if ($meal['breakfast'] != 1) {
-                echo "No breakfast record found for this user.";
-                exit;
-            }
-
-            if ($meal['breakfast_received'] == 1) {
-                echo "The staff already received the breakfast.";
-                exit;
-            }
-
-            // Step 3: Proceed to issue breakfast
-            if (isset($_POST['manual']) && $_POST['manual'] == '1') {
-                $update = $conn->prepare("UPDATE staff_meals SET breakfast_received = 1, manual_order = 1 WHERE staff_id = ? AND meal_date = ?");
-                $method = 'manual';
-            } else {
-                $update = $conn->prepare("UPDATE staff_meals SET breakfast_received = 1 WHERE staff_id = ? AND meal_date = ?");
-                $method = 'scan';
-            }
-
-            $update->bind_param("is", $staff_table_id, $today);
-
-            if ($update->execute()) {
-                // Step 4: Log to meal_issuance_log
-                $issuer_id = $_SESSION['order_user'] ?? 0;
-                $log = $conn->prepare("INSERT INTO meal_issuance_log (staff_id, meal_type, issued_by, method) VALUES (?, 'breakfast', ?, ?)");
-                $log->bind_param("iis", $staff_table_id, $issuer_id, $method);
-                $log->execute();
-
-                echo "success";
-                exit;
-            } else {
-                echo "Issue failed. Please try again.";
-                exit;
-            }
-
-        } else {
-            echo "No breakfast record found for this user.";
-            exit;
-        }
-
+        $is_registered = true;
     } else {
-        echo "Invalid Staff ID.";
-        exit;
+        // Unregistered staff (extra meal)
+        $is_registered = false;
+        // Insert unregistered staff into the staff table
+        $insert = $conn->prepare("INSERT INTO staff (staff_id, name) VALUES (?, ?)");
+        $insert->bind_param("ss", $staff_id, 'Unregistered Staff');
+        $insert->execute();
+        $staff_table_id = $conn->insert_id; // Get the ID of the newly inserted staff record
     }
+
+    // Insert or update breakfast meal record
+    // Set manual_order to 0 by default
+    $insert = $conn->prepare("INSERT INTO staff_meals (staff_id, meal_date, breakfast, breakfast_received, manual_order) 
+    VALUES (?, ?, 1, 1, 0) ON DUPLICATE KEY UPDATE breakfast_received = 1, manual_order = 0");
+    $insert->bind_param("ss", $staff_table_id, $breakfast_date);
+    $insert->execute();
+
+    // Log the meal issuance
+    $issuer_id = $_SESSION['order_user'] ?? 0;
+    $method = 'manual';  // Since the meal is being issued manually
+    $log = $conn->prepare("INSERT INTO meal_issuance_log (staff_id, meal_type, issued_by, method) VALUES (?, 'breakfast', ?, ?)");
+    $log->bind_param("iis", $staff_table_id, $issuer_id, $method);
+    $log->execute();
+
+    if ($is_registered) {
+        echo "<div class='alert alert-success'>Meal issued successfully.</div>";
+    } else {
+        // Red alert for unregistered staff
+        echo "<div class='alert alert-danger'>Extra meal issued to unregistered staff. Staff ID: {$staff_id}</div>";
+    }
+    exit;
 }
 
 echo "Invalid Request.";
 exit;
+?>

@@ -1,5 +1,6 @@
 <?php
 require_once '../admin/db.php';
+include_once '../admin/include/date.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
