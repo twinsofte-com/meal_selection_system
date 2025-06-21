@@ -61,17 +61,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         maxlength="10"
         required
         placeholder="PIN / පින් කේතය"
-        class="w-full px-4 py-3 border-2 border-[--primary-blue] rounded-lg text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-[--primary-red]"
+        class="w-full px-4 py-3 border-2 border-blue-600 rounded-lg text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-[--primary-red]"
       >
 
       <button type="submit"
-              class="w-full bg-[--primary-red] hover:bg-[--primary-blue] text-white font-bold py-2 rounded-lg transition duration-300">
+              class="w-full bg-red-600 hover:bg-blue-600 text-white font-bold py-2 rounded-lg transition duration-300">
         Login / පිවිසෙන්න
       </button>
     </form>
 
     <div class="text-center mt-6">
-      <a href="../index.php" class="text-sm text-[--primary-blue] hover:underline">
+      <a href="../index.php" class="text-sm text-blue-600 hover:underline">
         ← Back to Main Page / ප්‍රධාන පිටුවට
       </a>
     </div>

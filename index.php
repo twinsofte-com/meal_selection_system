@@ -25,7 +25,7 @@
       </a>
 
       <!-- Issue -->
-      <a href="issue/issue_login.php" class="bg-white rounded-xl shadow hover:shadow-xl transition p-6 text-center">
+      <a href="issue/" class="bg-white rounded-xl shadow hover:shadow-xl transition p-6 text-center">
         <i class="fas fa-check-circle text-blue-500 text-5xl mb-4"></i>
         <h2 class="text-xl font-semibold">Issue නිකුත් කිරීම</h2>
         <p class="text-gray-600 mt-2">Dining room panel</p>
