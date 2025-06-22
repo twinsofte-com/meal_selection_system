@@ -88,7 +88,7 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
       </div>
 
       <!-- Lunch -->
-      <div onclick="location.href='issue_lunch.php'" class="bg-white border-l-8 border-green-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
+      <div onclick="location.href='lunch/issue_lunch.php'" class="bg-white border-l-8 border-green-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
         <h3 class="text-2xl font-bold text-green-600">🍛 Lunch</h3>
         <p class="text-gray-600 text-lg">දවල්</p>
       </div>

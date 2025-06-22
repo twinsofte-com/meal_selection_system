@@ -1,15 +1,20 @@
 <?php
+/** @var \mysqli $conn */
 date_default_timezone_set('Asia/Colombo');
 require '../../admin/db.php';
 include_once '../../admin/include/date.php';
 
-$issue_date = date('Y-m-d', strtotime('-1 day'));
-$q = fn($sql) => (int)$conn->query($sql)->fetch_assoc()['cnt'];
+$issue_date = date('Y-m-d');
+
+// Count function
+$q = fn($sql) => (int)($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
+
+// Summary values
 $summary = [
-  'issued'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received=1 AND meal_date='$issue_date'"),
-  'manual'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received=1 AND manual_order=1 AND meal_date='$issue_date'"),
-  'pending' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast=1 AND breakfast_received=0 AND meal_date='$issue_date'"),
-  'extra'   => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE date=CURDATE() AND breakfast='1' AND manual_order ='1'")
+  'issued'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'"),
+  'manual'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_order = 1 AND meal_date = '$issue_date'"),
+  'pending' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'"),
+  'extra'   => $q("SELECT COUNT(*) cnt FROM extra_meal_issues WHERE breakfast = 1 AND meal_date = '$issue_date'"),
 ];
 ?>
 <!DOCTYPE html>
@@ -65,7 +70,7 @@ $summary = [
           'extra' => 'Manual Order Total'
         ];
         foreach ($summary as $k => $v): ?>
-          <div onclick="showDetails('<?= $k ?>')" class="p-4 rounded cursor-pointer bg-<?= $colors[$k] ?>-500 hover:opacity-90 transition">
+          <div onclick="openDetailsModal('<?= $k ?>')" class="p-4 rounded cursor-pointer bg-<?= $colors[$k] ?>-500 hover:opacity-90 transition">
             <div class="text-sm font-semibold"><?= $titles[$k] ?></div>
             <div class="text-xl font-bold"><?= $v ?></div>
           </div>
@@ -154,7 +159,7 @@ $summary = [
 
     document.getElementById('confirmYes').addEventListener('click', function () {
       if (!currentStaffId) return;
-      fetch('confirm_breakfast_issue.php', {
+      fetch('./confirm_breakfast_issue.php', {
         method: 'POST',
         body: new URLSearchParams({
           staff_id: currentStaffId,
@@ -176,7 +181,7 @@ $summary = [
       });
     });
 
-    function showDetails(type) {
+    function openDetailsModal(type) {
       const titles = {
         issued: 'Issued Meals (Green)',
         manual: 'Admin Manual Requests (Red)',
