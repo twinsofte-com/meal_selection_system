@@ -7,18 +7,19 @@ include_once '../../admin/include/date.php';
 $issue_date = date('Y-m-d');
 
 // Count function
-$q = fn($sql) => (int)($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
+$q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
 
 // Summary values
 $summary = [
-  'issued'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'"),
-  'manual'  => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_order = 1 AND meal_date = '$issue_date'"),
+  'issued' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'"),
+  'manual' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_order = 1 AND meal_date = '$issue_date'"),
   'pending' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'"),
-  'extra'   => $q("SELECT COUNT(*) cnt FROM extra_meal_issues WHERE breakfast = 1 AND meal_date = '$issue_date'"),
+  'extra' => $q("SELECT COUNT(*) cnt FROM extra_meal_issues WHERE breakfast = 1 AND meal_date = '$issue_date'"),
 ];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Issue Breakfast — <?= $issue_date ?></title>
@@ -26,10 +27,13 @@ $summary = [
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
+
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col p-2">
 
   <!-- Alert -->
-  <div id="alertBox" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs p-3 rounded text-white text-center font-semibold"></div>
+  <div id="alertBox"
+    class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs p-3 rounded text-white text-center font-semibold">
+  </div>
 
   <!-- Container -->
   <div class="bg-white rounded-lg shadow-md flex flex-col md:flex-row overflow-hidden w-full max-w-5xl mx-auto mt-4">
@@ -41,7 +45,8 @@ $summary = [
       <select id="cameraSelect" class="w-full border rounded p-2 mb-3"></select>
 
       <!-- Camera Preview -->
-      <div id="preview" class="h-40 sm:h-48 md:h-64 max-h-[250px] border-4 border-dashed rounded bg-gray-50 overflow-hidden mb-3"></div>
+      <div id="preview"
+        class="h-40 sm:h-48 md:h-64 max-h-[250px] border-4 border-dashed rounded bg-gray-50 overflow-hidden mb-3"></div>
 
       <!-- Employee Info -->
       <div id="employee-info" class="hidden text-center mb-3">
@@ -62,7 +67,7 @@ $summary = [
       <h2 class="text-lg font-bold mb-4">Summary — <?= $issue_date ?></h2>
       <div class="grid grid-cols-2 gap-4 text-white">
         <?php
-        $colors = ['issued'=>'green','manual'=>'red','pending'=>'yellow','extra'=>'blue'];
+        $colors = ['issued' => 'green', 'manual' => 'red', 'pending' => 'yellow', 'extra' => 'blue'];
         $titles = [
           'issued' => 'Issued Meals',
           'manual' => 'Extra Issued',
@@ -70,7 +75,8 @@ $summary = [
           'extra' => 'Manual Order Total'
         ];
         foreach ($summary as $k => $v): ?>
-          <div onclick="openDetailsModal('<?= $k ?>')" class="p-4 rounded cursor-pointer bg-<?= $colors[$k] ?>-500 hover:opacity-90 transition">
+          <div onclick="openDetailsModal('<?= $k ?>')"
+            class="p-4 rounded cursor-pointer bg-<?= $colors[$k] ?>-500 hover:opacity-90 transition">
             <div class="text-sm font-semibold"><?= $titles[$k] ?></div>
             <div class="text-xl font-bold"><?= $v ?></div>
           </div>
@@ -83,8 +89,8 @@ $summary = [
   <div id="manualModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <form id="manualForm" class="bg-white p-6 rounded shadow-lg w-80">
       <h2 class="font-bold text-lg mb-4">Manual Entry</h2>
-      <input id="manualStaffID" name="staff_id" placeholder="Staff ID" required class="border p-2 w-full mb-4"/>
-      <input type="hidden" name="manual" value="1"/>
+      <input id="manualStaffID" name="staff_id" placeholder="Staff ID" required class="border p-2 w-full mb-4" />
+      <input type="hidden" name="manual" value="1" />
       <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded">Submit</button>
       <button type="button" onclick="closeManualModal()" class="mt-2 text-gray-600 w-full">Cancel</button>
     </form>
@@ -166,19 +172,19 @@ $summary = [
           manual: isManual ? '1' : '0'
         })
       })
-      .then(res => res.text())
-      .then(text => {
-        if (text.trim() === 'success') {
-          showAlert("Breakfast issued successfully", "success");
-          setTimeout(() => location.reload(), 1000);
-        } else {
-          showAlert(text.trim(), "error");
-        }
-        closeConfirmModal();
-        resetScan();
-      }).catch(err => {
-        showAlert("Server error: " + err.message, "error");
-      });
+        .then(res => res.text())
+        .then(text => {
+          if (text.trim() === 'success') {
+            showAlert("Breakfast issued successfully", "success");
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showAlert(text.trim(), "error");
+          }
+          closeConfirmModal();
+          resetScan();
+        }).catch(err => {
+          showAlert("Server error: " + err.message, "error");
+        });
     });
 
     function openDetailsModal(type) {
@@ -188,6 +194,7 @@ $summary = [
         pending: 'Pending Meals (Yellow)',
         extra: 'Manual Order Total (Blue)',
       };
+
       const colors = {
         issued: 'text-green-600',
         manual: 'text-red-600',
@@ -198,15 +205,27 @@ $summary = [
       fetch(`../meal_details.php?type=${type}`)
         .then(res => res.json())
         .then(data => {
+          // Add a check if no data is returned
+          if (data.length === 0) {
+            document.getElementById('detailList').innerHTML = `<li class="text-gray-500 italic">No records found.</li>`;
+          } else {
+            document.getElementById('detailList').innerHTML = data.map(item => {
+              return `<li class="border p-2 rounded ${colors[type]} bg-gray-50">
+                    ${item.staff_id} — ${item.name} 
+                    <span class="font-bold">${item.received === 'yes' ? '✔' : '✘'}</span>
+                  </li>`;
+            }).join('');
+          }
+
           document.getElementById('detailTitle').innerHTML = `<span class="${colors[type]}">${titles[type]}</span>`;
-          const list = document.getElementById('detailList');
-          list.innerHTML = data.length
-            ? data.map(item => `<li class="border p-2 rounded ${colors[type]} bg-gray-50">${item.staff_id} — ${item.name} <span class="font-bold">${item.received === 'yes' ? '✔' : '✘'}</span></li>`).join('')
-            : `<li class="text-gray-500 italic">No records found.</li>`;
           document.getElementById('detailModal').classList.remove('hidden');
           document.getElementById('detailModal').classList.add('flex');
+        }).catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('detailList').innerHTML = `<li class="text-gray-500 italic">Error fetching records.</li>`;
         });
     }
+
 
     function closeDetailModal() {
       document.getElementById('detailModal').classList.add('hidden');
@@ -214,4 +233,5 @@ $summary = [
     }
   </script>
 </body>
+
 </html>
