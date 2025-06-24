@@ -10,13 +10,17 @@ $issue_date = date('Y-m-d');
 $q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
 
 // Summary values
+$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND meal_date = '$issue_date'");
+$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'");
+
 $summary = [
-  'issued' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'"),
-  'manual' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_order = 1 AND meal_date = '$issue_date'"),
-  'pending' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'"),
-  'extra' => $q("SELECT COUNT(*) cnt FROM extra_meal_issues WHERE breakfast = 1 AND meal_date = '$issue_date'"),
+  'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],  // Displays both issued and total ordered
+  'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'")],
+  'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'")],
+  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_breakfast = 1 AND breakfast = 1 AND meal_date = '$issue_date'")],
 ];
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -67,18 +71,21 @@ $summary = [
       <h2 class="text-lg font-bold mb-4">Summary — <?= $issue_date ?></h2>
       <div class="grid grid-cols-2 gap-4 text-white">
         <?php
-        $colors = ['issued' => 'green', 'manual' => 'red', 'pending' => 'yellow', 'extra' => 'blue'];
+        $colors = ['issued' => 'green', 'manual' => 'blue', 'pending' => 'yellow', 'extra' => 'red'];
         $titles = [
-          'issued' => 'Issued Meals',
-          'manual' => 'Extra Issued',
-          'pending' => 'Pending Meals',
-          'extra' => 'Manual Order Total'
+          'issued' => 'Balance / Total',
+          'manual' => 'Issued',
+          'pending' => 'Pending',
+          'extra' => 'Extra Orders'
         ];
+
         foreach ($summary as $k => $v): ?>
           <div onclick="openDetailsModal('<?= $k ?>')"
             class="p-4 rounded cursor-pointer bg-<?= $colors[$k] ?>-500 hover:opacity-90 transition">
             <div class="text-sm font-semibold"><?= $titles[$k] ?></div>
-            <div class="text-xl font-bold"><?= $v ?></div>
+            <div class="text-xl font-bold">
+              <?= $k === 'issued' ? "{$v['value']} / {$v['total']}" : $v['value'] ?>
+            </div>
           </div>
         <?php endforeach; ?>
       </div>
@@ -110,14 +117,22 @@ $summary = [
     <div class="bg-white max-w-md w-full mx-4 rounded-lg shadow-lg p-6 overflow-y-auto max-h-[80vh]">
       <div class="flex justify-between items-center mb-4">
         <h3 id="detailTitle" class="text-lg font-semibold text-gray-700"></h3>
-        <button onclick="closeDetailModal()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadDetailPDF()"
+            class="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Download PDF
+          </button>
+          <button onclick="closeDetailModal()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+        </div>
       </div>
+
       <ul id="detailList" class="space-y-2 text-sm"></ul>
     </div>
   </div>
-
   <!-- Scripts -->
   <script src="../js/qrcode.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
     let currentStaffId = null;
     let isManual = false;
@@ -189,49 +204,85 @@ $summary = [
 
     function openDetailsModal(type) {
       const titles = {
-        issued: 'Issued Meals (Green)',
-        manual: 'Admin Manual Requests (Red)',
-        pending: 'Pending Meals (Yellow)',
-        extra: 'Manual Order Total (Blue)',
+        issued: 'Issued All',
+        manual: 'Issued All',
+        pending: 'Pending',
+        extra: 'Extra Issued',
       };
 
       const colors = {
         issued: 'text-green-600',
-        manual: 'text-red-600',
+        manual: 'text-blue-600',
         pending: 'text-yellow-600',
-        extra: 'text-blue-600',
+        extra: 'text-red-600',
       };
 
-      fetch(`../meal_details.php?type=${type}`)
+      const detailModal = document.getElementById('detailModal');
+      const detailTitle = document.getElementById('detailTitle');
+      const detailList = document.getElementById('detailList');
+
+      fetch(`../meal_details.php?type=${type}`, {
+        cache: 'no-store'
+      })
         .then(res => res.json())
         .then(data => {
-          // Add a check if no data is returned
-          if (data.length === 0) {
-            document.getElementById('detailList').innerHTML = `<li class="text-gray-500 italic">No records found.</li>`;
+          if (!Array.isArray(data) || data.length === 0) {
+            detailList.innerHTML = `<li class="text-gray-500 italic">No records found.</li>`;
           } else {
-            document.getElementById('detailList').innerHTML = data.map(item => {
-              return `<li class="border p-2 rounded ${colors[type]} bg-gray-50">
-                    ${item.staff_id} — ${item.name} 
-                    <span class="font-bold">${item.received === 'yes' ? '✔' : '✘'}</span>
-                  </li>`;
+            detailList.innerHTML = data.map(item => {
+              const isExtra = parseInt(item.manual_breakfast) === 1 && item.received === 'yes';
+
+              const tag = isExtra
+                ? '<span class="ml-2 text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Extra</span>'
+                : '';
+
+              return `<li class="border p-2 rounded bg-gray-50 ${isExtra ? 'text-red-600 font-bold' : 'text-gray-800'}">
+                ${item.staff_id} — ${item.name} ${tag}
+                <span class="font-bold float-right">${item.received === 'yes' ? '✔' : '✘'}</span>
+              </li>`;
             }).join('');
+
+
           }
 
-          document.getElementById('detailTitle').innerHTML = `<span class="${colors[type]}">${titles[type]}</span>`;
-          document.getElementById('detailModal').classList.remove('hidden');
-          document.getElementById('detailModal').classList.add('flex');
-        }).catch(error => {
+          detailTitle.innerHTML = `<span class="${colors[type]}">${titles[type]}</span>`;
+          detailModal.classList.remove('hidden');
+          detailModal.classList.add('flex');
+        })
+        .catch(error => {
           console.error('Error fetching data:', error);
-          document.getElementById('detailList').innerHTML = `<li class="text-gray-500 italic">Error fetching records.</li>`;
+          detailList.innerHTML = `<li class="text-gray-500 italic">Error fetching records.</li>`;
+          detailModal.classList.remove('hidden');
+          detailModal.classList.add('flex');
         });
     }
-
 
     function closeDetailModal() {
       document.getElementById('detailModal').classList.add('hidden');
       document.getElementById('detailModal').classList.remove('flex');
     }
+
+    async function downloadDetailPDF() {
+      const modalContent = document.querySelector('#detailModal > div');
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'pt', 'a4');
+
+      await html2canvas(modalContent, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const imgWidth = pageWidth - 40;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        doc.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+        doc.save('Meal_Issue_Report.pdf');
+      });
+    }
+
+
   </script>
+  <!-- Footer -->
+  <?php include '../include/footer.php'; ?>
 </body>
 
 </html>

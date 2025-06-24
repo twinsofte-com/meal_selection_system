@@ -1,5 +1,5 @@
 <!-- footer.php -->
-<footer class="bg-blue-800 text-white text-center text-lg py-3 fixed bottom-0 w-full z-50">
+<footer class="bg-blue-800 text-white text-center text-lg py-3 w-full z-50 mt-10">
   <div id="live-clock" class="font-bold"></div>
   <div class="text-sm">Powered by Twinsofte.com. All rights reserved.</div>
 

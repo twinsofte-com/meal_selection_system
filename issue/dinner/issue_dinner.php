@@ -5,22 +5,21 @@ include_once '../../admin/include/date.php';
 
 $issue_date = date('Y-m-d');
 
-// Count function for lunch
+// Count function
 $q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
 
-$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch = 1 AND meal_date = '$issue_date'");
-$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND meal_date = '$issue_date'");
+$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner = 1 AND meal_date = '$issue_date'");
+$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND meal_date = '$issue_date'");
 
 $summary = [
   'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],
-  'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND meal_date = '$issue_date'")],
-  'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch = 1 AND lunch_received = 0 AND meal_date = '$issue_date'")],
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND manual_lunch = 1 AND lunch = 1 AND meal_date = '$issue_date'")],
+  'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND meal_date = '$issue_date'")],
+  'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner = 1 AND dinner_received = 0 AND meal_date = '$issue_date'")],
+  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND manual_dinner = 1 AND dinner = 1 AND meal_date = '$issue_date'")],
 ];
 
-$meal_type = 'Lunch';
-$confirm_script = 'confirm_lunch_issue.php';
-// include '../include/issue_template.php'; // reuse template if exists
+$meal_type = 'Dinner';
+$confirm_script = 'confirm_dinner_issue.php';
 ?>
 
 <!DOCTYPE html>
@@ -28,7 +27,7 @@ $confirm_script = 'confirm_lunch_issue.php';
 
 <head>
   <meta charset="UTF-8">
-  <title>Issue Breakfast — <?= $issue_date ?></title>
+  <title>Issue Dinner — <?= $issue_date ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -176,13 +175,13 @@ $confirm_script = 'confirm_lunch_issue.php';
       currentStaffId = staffId;
       isManual = true;
       closeManualModal();
-      document.getElementById('confirmText').textContent = `Confirm issuing breakfast to ${staffId}?`;
+      document.getElementById('confirmText').textContent = `Confirm issuing Dinner to ${staffId}?`;
       document.getElementById('confirmModal').classList.remove('hidden');
     });
 
     document.getElementById('confirmYes').addEventListener('click', function () {
       if (!currentStaffId) return;
-      fetch('./confirm_breakfast_issue.php', {
+      fetch('./confirm_dinner_issue.php', {
         method: 'POST',
         body: new URLSearchParams({
           staff_id: currentStaffId,
@@ -192,7 +191,7 @@ $confirm_script = 'confirm_lunch_issue.php';
         .then(res => res.text())
         .then(text => {
           if (text.trim() === 'success') {
-            showAlert("Breakfast issued successfully", "success");
+            showAlert("Dinner issued successfully", "success");
             setTimeout(() => location.reload(), 1000);
           } else {
             showAlert(text.trim(), "error");
@@ -223,7 +222,7 @@ $confirm_script = 'confirm_lunch_issue.php';
       const detailTitle = document.getElementById('detailTitle');
       const detailList = document.getElementById('detailList');
 
-      fetch(`../meal_details_lunch.php?type=${type}`, {
+      fetch(`../meal_details_dinner.php?type=${type}`, {
         cache: 'no-store'
       })
         .then(res => res.json())
@@ -232,8 +231,7 @@ $confirm_script = 'confirm_lunch_issue.php';
             detailList.innerHTML = `<li class="text-gray-500 italic">No records found.</li>`;
           } else {
             detailList.innerHTML = data.map(item => {
-              const isExtra = parseInt(item.manual_breakfast) === 1 && item.received === 'yes';
-
+              const isExtra = parseInt(item.manual_dinner) === 1 && item.received === 'yes';
               const tag = isExtra
                 ? '<span class="ml-2 text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Extra</span>'
                 : '';

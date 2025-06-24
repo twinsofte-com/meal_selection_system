@@ -1,43 +1,46 @@
 <?php
-include_once '../../admin/include/date.php';
-require '../../admin/db.php';
-session_start();
+require_once '../../admin/db.php';
+require_once '../../admin/functions.php';
 
-if (!isset($_SESSION['order_user'])) {
-  header('Location: ../order_login.php');
-  exit;
-}
+$staff_id = $_GET['staff_id'] ?? '';
+$manual = $_GET['manual'] ?? 0;
+$already = $_GET['already'] ?? 0;
 
-if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['staff_id'])) {
-  $staff_id = trim($_POST['staff_id']);
-  $meal_date = date('Y-m-d');
+$stmt = $conn->prepare("SELECT name FROM staff WHERE staff_id = ?");
+$stmt->bind_param("s", $staff_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$name = $row['name'] ?? 'Unknown';
 
-  $stmt = $conn->prepare("SELECT id, name FROM staff WHERE staff_id = ?");
-  $stmt->bind_param("s", $staff_id);
-  $stmt->execute();
-  $staff = $stmt->get_result()->fetch_assoc();
+$bgColor = ($already == 1) ? '#FFFF99' : ($manual ? '#FFCCCC' : '#CCFFCC');
+$message = ($already == 1) ? "Lunch Already Issued" : ($manual ? "Manual Lunch Issued" : "Lunch Issued");
+?>
 
-  $is_registered = !!$staff;
-  $staff_table_id = $is_registered ? $staff['id'] : null;
-  if (!$is_registered) {
-    $ins = $conn->prepare("INSERT INTO staff (staff_id, name) VALUES (?, 'Unregistered Staff')");
-    $ins->bind_param("s", $staff_id);
-    $ins->execute();
-    $staff_table_id = $conn->insert_id;
-  }
-
-  $insMeal = $conn->prepare("INSERT INTO staff_meals (staff_id, meal_date, lunch, lunch_received, manual_order) VALUES (?, ?, 1, 1, 0) ON DUPLICATE KEY UPDATE lunch_received=1, manual_order=0");
-  $insMeal->bind_param("is", $staff_table_id, $meal_date);
-  $insMeal->execute();
-
-  $issuer = $_SESSION['order_user'];
-  $log = $conn->prepare("INSERT INTO meal_issuance_log (staff_id, meal_type, issued_by, method) VALUES (?, 'lunch', ?, 'manual')");
-  $log->bind_param("ii", $staff_table_id, $issuer);
-  $log->execute();
-
-  echo $is_registered
-    ? "<div class='alert alert-success'>Lunch issued successfully.</div>"
-    : "<div class='alert alert-danger'>Extra lunch issued to unregistered staff. ID: {$staff_id}</div>";
-  exit;
-}
-echo "Invalid Request.";
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lunch Issued</title>
+    <style>
+        body {
+            background-color: <?= $bgColor ?>;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 100px;
+        }
+        .box {
+            font-size: 24px;
+            padding: 20px;
+            display: inline-block;
+            border: 2px solid #000;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <p><strong><?= htmlspecialchars($name) ?></strong></p>
+        <p><?= $message ?></p>
+    </div>
+</body>
+</html>

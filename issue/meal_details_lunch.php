@@ -13,43 +13,45 @@ $list = [];
 switch ($type) {
   case 'issued':
     $sql = "SELECT staff.staff_id, staff.name, 
-                   IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received,
-                   staff_meals.manual_breakfast
+                   IF(staff_meals.lunch_received = 1, 'yes', 'no') AS received,
+                   staff_meals.manual_lunch
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE DATE(staff_meals.meal_date) = '$meal_date'";
+            WHERE staff_meals.lunch = 1
+              AND staff_meals.manual_lunch = 0
+              AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
   case 'manual':
     $sql = "SELECT staff.staff_id, staff.name,
                  'yes' AS received,
-                 staff_meals.manual_breakfast
+                 staff_meals.manual_lunch
           FROM staff_meals
           JOIN staff ON staff.id = staff_meals.staff_id
-          WHERE staff_meals.breakfast_received = 1 
+          WHERE staff_meals.lunch_received = 1 
             AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
   case 'pending':
     $sql = "SELECT staff.staff_id, staff.name, 
                    'no' AS received,
-                   staff_meals.manual_breakfast
+                   staff_meals.manual_lunch
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.breakfast = 1 
-            AND staff_meals.breakfast_received = 0 
+            WHERE staff_meals.lunch = 1 
+            AND staff_meals.lunch_received = 0 
             AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
   case 'extra':
     $sql = "SELECT staff.staff_id, staff.name,
                  'yes' AS received,
-                 staff_meals.manual_breakfast
+                 staff_meals.manual_lunch
           FROM staff_meals
           JOIN staff ON staff.id = staff_meals.staff_id
-          WHERE staff_meals.breakfast_received = 1 
-            AND staff_meals.manual_breakfast = 1 
-            AND staff_meals.breakfast = 1 
+          WHERE staff_meals.lunch_received = 1 
+            AND staff_meals.manual_lunch = 1 
+            AND staff_meals.lunch = 1 
             AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
