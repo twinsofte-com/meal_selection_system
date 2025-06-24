@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $staff_id = trim($_POST['staff_id'] ?? '');
 
     if ($name && $phone && $staff_type && $staff_id) {
-        $full_id = $staff_type . '-' . $staff_id;
+        $full_id = $staff_id;
 
         // Check if staff_id already exists
         $stmt = $conn->prepare("SELECT id FROM staff WHERE staff_id = ?");
