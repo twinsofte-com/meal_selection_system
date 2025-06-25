@@ -6,13 +6,12 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 }
 
 require_once 'db.php';
-require_once '../fpdf/fpdf.php';  // Make sure the FPDF library is included
+require_once '../fpdf/fpdf.php';
 include_once 'include/date.php';
 
-// Check for selected date or use today's date
-$selected_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$selected_date = $_GET['date'] ?? date('Y-m-d');
 
-// Fetch meal data for selected date
+// Fetch only extra meal orders
 $stmt = $conn->prepare("
     SELECT 
         s.staff_id,
@@ -20,14 +19,13 @@ $stmt = $conn->prepare("
         sm.breakfast,
         sm.lunch,
         sm.dinner,
-        sm.vegetarian,
-        sm.egg,
-        sm.chicken,
-        sm.meal_date,
-        sm.manual_order
+        sm.manual_breakfast,
+        sm.manual_lunch,
+        sm.manual_dinner
     FROM staff_meals sm
     JOIN staff s ON sm.staff_id = s.id
     WHERE sm.meal_date = ?
+      AND (sm.manual_breakfast = 1 OR sm.manual_lunch = 1 OR sm.manual_dinner = 1)
     ORDER BY s.name
 ");
 
@@ -35,99 +33,65 @@ $stmt->bind_param("s", $selected_date);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Create a new FPDF instance
-$pdf = new FPDF();
+$pdf = new FPDF('L', 'mm', 'A4');
 $pdf->AddPage();
+$pdf->SetFont('Arial', 'B', 14);
+$pdf->Cell(0, 10, "Extra Meal Orders - $selected_date", 0, 1, 'C');
+$pdf->Ln(5);
 
-// Set title
-$pdf->SetFont('Arial', 'B', 16);
-$pdf->Cell(0, 10, "Meal Orders Report for " . htmlspecialchars($selected_date), 0, 1, 'C');
+// Table Headers
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->SetFillColor(220, 220, 220); // Light gray
+$pdf->Cell(40, 10, 'Staff ID', 1, 0, 'C', true);
+$pdf->Cell(60, 10, 'Name', 1, 0, 'C', true);
+$pdf->Cell(30, 10, 'Breakfast', 1, 0, 'C', true);
+$pdf->Cell(30, 10, 'Lunch', 1, 0, 'C', true);
+$pdf->Cell(30, 10, 'Dinner', 1, 1, 'C', true);
 
-// Add table headers
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(25, 10, 'Staff ID', 1);
-$pdf->Cell(50, 10, 'Name', 1);
-$pdf->Cell(25, 10, 'Breakfast', 1);
-$pdf->Cell(25, 10, 'Lunch', 1);
-$pdf->Cell(25, 10, 'Dinner', 1);
-$pdf->Cell(25, 10, 'Vegetarian', 1);
-$pdf->Cell(25, 10, 'Egg', 1);
-$pdf->Cell(25, 10, 'Chicken', 1);
-$pdf->Ln();
-
-// Populate the table with meal data
-$pdf->SetFont('Arial', '', 12);
+// Table Data
+$pdf->SetFont('Arial', '', 10);
 while ($row = $result->fetch_assoc()) {
-    // Check if the meal is a manual order
-    if ($row['manual_order'] == 1) {
-        $pdf->SetFillColor(255, 223, 186);  // Light Yellow background for manual orders
-    } else {
-        $pdf->SetFillColor(255, 255, 255);  // White background for regular orders
-    }
-    
-    // Staff ID
-    $pdf->Cell(25, 10, htmlspecialchars($row['staff_id']), 1, 0, 'C', true);
-    // Name
-    $pdf->Cell(50, 10, htmlspecialchars($row['name']), 1, 0, 'C', true);
+    $pdf->SetTextColor(0, 0, 0);
+
+    $pdf->Cell(40, 10, $row['staff_id'], 1);
+    $pdf->Cell(60, 10, $row['name'], 1);
 
     // Breakfast
-    if ($row['breakfast']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
+    $text = $row['breakfast'] ? 'Yes' : 'No';
+    if ($row['manual_breakfast']) {
+        $text .= ' (Extra)';
+        $pdf->SetTextColor(255, 0, 0);
     }
+    $pdf->Cell(30, 10, $text, 1);
+    $pdf->SetTextColor(0, 0, 0);
 
     // Lunch
-    if ($row['lunch']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
+    $text = $row['lunch'] ? 'Yes' : 'No';
+    if ($row['manual_lunch']) {
+        $text .= ' (Extra)';
+        $pdf->SetTextColor(255, 0, 0);
     }
+    $pdf->Cell(30, 10, $text, 1);
+    $pdf->SetTextColor(0, 0, 0);
 
     // Dinner
-    if ($row['dinner']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
+    $text = $row['dinner'] ? 'Yes' : 'No';
+    if ($row['manual_dinner']) {
+        $text .= ' (Extra)';
+        $pdf->SetTextColor(255, 0, 0);
     }
-
-    // Vegetarian preference
-    if ($row['vegetarian']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
-    }
-
-    // Egg preference
-    if ($row['egg']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
-    }
-
-    // Chicken preference
-    if ($row['chicken']) {
-        $pdf->SetFillColor(0, 255, 0);  // Green for Yes
-        $pdf->Cell(25, 10, 'Yes', 1, 0, 'C', true);
-    } else {
-        $pdf->SetFillColor(255, 0, 0);  // Red for No
-        $pdf->Cell(25, 10, 'No', 1, 0, 'C', true);
-    }
+    $pdf->Cell(30, 10, $text, 1);
+    $pdf->SetTextColor(0, 0, 0);
 
     $pdf->Ln();
 }
 
-// Output the PDF to the browser for download
-$pdf->Output('D', "Meal_Orders_Report_{$selected_date}.pdf");
+// Footer with date
+$pdf->Ln(5);
+$pdf->SetFont('Arial', 'I', 9);
+$pdf->SetTextColor(100, 100, 100);
+$pdf->Cell(0, 10, "Downloaded on: " . date('Y-m-d H:i:s'), 0, 0, 'R');
+
+// Output
+$pdf->Output('D', "Extra_Meal_Orders_Report_{$selected_date}.pdf");
 exit;
-?>

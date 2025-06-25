@@ -180,7 +180,7 @@ $summary = [
 
     document.getElementById('confirmYes').addEventListener('click', function () {
       if (!currentStaffId) return;
-      fetch('./confirm_breakfast_issue.php', {
+      fetch('confirm_breakfast_issue.php', {
         method: 'POST',
         body: new URLSearchParams({
           staff_id: currentStaffId,

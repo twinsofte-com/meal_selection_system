@@ -48,7 +48,7 @@ if (isset($_GET['staff_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download QR Codes</title>
-    <link rel="stylesheet" href="css/admin_style.css"> <!-- Link to the CSS file -->
+    <link rel="stylesheet" href="assets/css/admin_style.css"> <!-- Link to the CSS file -->
     <style>
         /* Inline CSS for demonstration; ideally, move this to admin_style.css */
 

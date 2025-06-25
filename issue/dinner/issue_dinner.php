@@ -181,7 +181,7 @@ $confirm_script = 'confirm_dinner_issue.php';
 
     document.getElementById('confirmYes').addEventListener('click', function () {
       if (!currentStaffId) return;
-      fetch('./confirm_dinner_issue.php', {
+      fetch('confirm_dinner_issue.php', {
         method: 'POST',
         body: new URLSearchParams({
           staff_id: currentStaffId,

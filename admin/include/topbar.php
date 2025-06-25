@@ -24,7 +24,7 @@ date_default_timezone_set('Asia/Colombo');
   <div class="relative">
     <button id="userMenu" class="bg-[#2E3095] text-white px-4 py-2 rounded-lg">Admin ▾</button>
     <div id="dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-md z-10">
-      <a href="logout.php" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+      <a href="auth/logout.php" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
     </div>
   </div>
 </div>
