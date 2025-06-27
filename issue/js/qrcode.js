@@ -12,7 +12,9 @@ function onScanSuccess(decodedText) {
       }
 
       if (data.staff_id) {
-        if (data.breakfast_received === '1') {
+        const receivedKey = `${MEAL_TYPE}_received`;
+
+        if (data[receivedKey] === '1') {
           showAlert(`Meal already received for ${data.name} (${data.staff_id}).`, 'error');
           resetScan();
           return;
@@ -23,7 +25,7 @@ function onScanSuccess(decodedText) {
         document.getElementById('employee-info').classList.remove('hidden');
 
         pendingStaffId = data.staff_id;
-        document.getElementById('confirmText').textContent = `Confirm issue breakfast to ${data.name} (${data.staff_id})?`;
+        document.getElementById('confirmText').textContent = `Confirm issue ${MEAL_TYPE} to ${data.name} (${data.staff_id})?`;
         document.getElementById('confirmModal').classList.remove('hidden');
       } else {
         showAlert('Staff not found.', 'error');
@@ -62,7 +64,6 @@ function stopCamera() {
 
 const scannerConfig = {
   fps: 10,
-  // qrbox: { width: 250, height: 250 }, // Focused square area
   aspectRatio: 1.7778,
   disableFlip: false
 };
@@ -74,14 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData();
     formData.append('staff_id', pendingStaffId);
 
-    fetch('../breakfast/confirm_breakfast_issue.php', {
+    fetch(CONFIRM_SCRIPT, {
       method: 'POST',
       body: formData
     })
     .then(response => response.text())
     .then(text => {
       if (text.trim() === 'success' || text.trim() === '') {
-        showAlert('Breakfast issued successfully.');
+        showAlert(`${MEAL_TYPE.charAt(0).toUpperCase() + MEAL_TYPE.slice(1)} issued successfully.`);
         setTimeout(() => window.location.reload(), 1000);
       } else {
         showAlert(text.trim(), 'error');
@@ -92,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => showAlert('Server error', 'error'));
   });
 
-  // Initialize camera
+  // Initialize scanner
   scanner = new Html5Qrcode("preview");
 
   Html5Qrcode.getCameras().then(devices => {
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     select.addEventListener('change', () => {
       scanner.stop().then(() => {
-        scanner.start(select.value, scannerConfig, onScanSuccess, err => console.error('Camera switch scan error:', err));
+        scanner.start(select.value, scannerConfig, onScanSuccess, err => console.error('Switch camera error:', err));
       }).catch(e => console.error('Switch camera error:', e));
     });
   }).catch(err => {

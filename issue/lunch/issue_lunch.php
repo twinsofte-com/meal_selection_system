@@ -34,11 +34,10 @@ $pending = $q("SELECT COUNT(*) cnt FROM staff_meals
 
 
 $summary = [
-  'issued' => ['value' => $balance, 'total' => $totalOrdered], // Balance / Total
-  'manual' => ['value' => $totalIssued], // All issued (pre + extra)
-  'pending' => ['value' => $pending], // Same as balance
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND manual_lunch = 1 AND meal_date = '$issue_date'")],
-
+  'issued' => ['value' => $balance, 'total' => $totalOrdered],
+  'manual' => ['value' => $totalIssued],
+  'pending' => ['value' => $pending],
+  'extra' => ['value' => $totalExtra],
 ];
 
 $meal_type = 'Lunch';
@@ -50,7 +49,7 @@ $confirm_script = 'confirm_lunch_issue.php';
 
 <head>
   <meta charset="UTF-8">
-  <title>Issue Breakfast — <?= $issue_date ?></title>
+  <title>Issue Lunch — <?= $issue_date ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -65,13 +64,16 @@ $confirm_script = 'confirm_lunch_issue.php';
 
   <!-- Show alert if extra meals were issued -->
   <?php if ($totalExtra > 0): ?>
-  <div class="w-full max-w-5xl mx-auto mt-4 px-4 py-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded shadow text-sm font-medium font-sans flex items-center justify-between">
-    <span>
-      ⚠️ <?= $totalExtra ?> extra meal<?= $totalExtra > 1 ? 's have' : ' has' ?> been issued. Please arrange additional meals accordingly.
-    </span>
-    <button onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800 text-xl leading-none font-bold">&times;</button>
-  </div>
-<?php endif; ?>
+    <div
+      class="w-full max-w-5xl mx-auto mt-4 px-4 py-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded shadow text-sm font-medium font-sans flex items-center justify-between">
+      <span>
+        ⚠️ <?= $totalExtra ?> extra meal<?= $totalExtra > 1 ? 's have' : ' has' ?> been issued. Please arrange additional
+        meals accordingly.
+      </span>
+      <button onclick="this.parentElement.remove()"
+        class="text-red-600 hover:text-red-800 text-xl leading-none font-bold">&times;</button>
+    </div>
+  <?php endif; ?>
 
 
   <!-- Container -->
@@ -165,6 +167,10 @@ $confirm_script = 'confirm_lunch_issue.php';
     </div>
   </div>
   <!-- Scripts -->
+  <script>
+    const MEAL_TYPE = 'lunch';
+    const CONFIRM_SCRIPT = 'confirm_lunch_issue.php';
+  </script>
   <script src="../js/qrcode.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -209,7 +215,7 @@ $confirm_script = 'confirm_lunch_issue.php';
       currentStaffId = staffId;
       isManual = true;
       closeManualModal();
-      document.getElementById('confirmText').textContent = `Confirm issuing breakfast to ${staffId}?`;
+      document.getElementById('confirmText').textContent = `Confirm issuing lunch to ${staffId}?`;
       document.getElementById('confirmModal').classList.remove('hidden');
     });
 
@@ -225,7 +231,7 @@ $confirm_script = 'confirm_lunch_issue.php';
         .then(res => res.text())
         .then(text => {
           if (text.trim() === 'success') {
-            showAlert("Breakfast issued successfully", "success");
+            showAlert(`${MEAL_TYPE.charAt(0).toUpperCase() + MEAL_TYPE.slice(1)} issued successfully`, "success");
             setTimeout(() => location.reload(), 1000);
           } else {
             showAlert(text.trim(), "error");

@@ -36,8 +36,7 @@ $summary = [
   'issued' => ['value' => $balance, 'total' => $totalOrdered], // Balance / Total
   'manual' => ['value' => $totalIssued], // All issued (pre + extra)
   'pending' => ['value' => $balance], // Same as balance
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND manual_dinner = 1 AND meal_date = '$issue_date'")],
-
+  'extra' => ['value' => $totalExtra],
 ];
 
 $meal_type = 'Dinner';
@@ -165,6 +164,10 @@ $confirm_script = 'confirm_dinner_issue.php';
     </div>
   </div>
   <!-- Scripts -->
+  <script>
+    const MEAL_TYPE = 'dinner';
+    const CONFIRM_SCRIPT = 'confirm_dinner_issue.php';
+  </script>
   <script src="../js/qrcode.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
