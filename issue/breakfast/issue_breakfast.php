@@ -11,14 +11,36 @@ $issue_date = date('Y-m-d');
 $q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
 
 // Summary values
-$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND meal_date = '$issue_date'");
-$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'");
+$q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
+
+// ✅ Only count pre-ordered meals that are not already issued
+$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals 
+                    WHERE breakfast = 1 
+                      AND manual_breakfast = 0 
+                      AND meal_date = '$issue_date'");
+
+$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals 
+                   WHERE breakfast_received = 1 
+                     AND meal_date = '$issue_date'");
+
+$totalExtra = $q("SELECT COUNT(*) cnt FROM staff_meals 
+                  WHERE breakfast_received = 1 
+                    AND manual_breakfast = 1 
+                    AND meal_date = '$issue_date'");
+
+$balance = $totalOrdered - $totalIssued; // Prevent negative
+$pending = $q("SELECT COUNT(*) cnt FROM staff_meals 
+               WHERE breakfast = 1 
+                 AND breakfast_received = 0 
+                 AND manual_breakfast = 0 
+                 AND meal_date = '$issue_date'");
 
 $summary = [
-  'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],
-  'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'")],
-  'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'")],
+  'issued' => ['value' => $balance, 'total' => $totalOrdered], // Balance / Total
+  'manual' => ['value' => $totalIssued], // All issued (pre + extra)
+  'pending' => ['value' => $balance], // Same as balance
   'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_breakfast = 1 AND meal_date = '$issue_date'")],
+
 ];
 ?>
 
@@ -39,6 +61,19 @@ $summary = [
   <div id="alertBox"
     class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xs p-3 rounded text-white text-center font-semibold">
   </div>
+
+  <!-- Show alert if extra meals were issued -->
+  <?php if ($totalExtra > 0): ?>
+    <div
+      class="w-full max-w-5xl mx-auto mt-4 px-4 py-3 border-l-4 border-red-500 bg-red-100 text-red-800 rounded shadow text-sm font-medium font-sans flex items-center justify-between">
+      <span>
+        ⚠️ <?= $totalExtra ?> extra meal<?= $totalExtra > 1 ? 's have' : ' has' ?> been issued. Please arrange additional
+        meals accordingly.
+      </span>
+      <button onclick="this.parentElement.remove()"
+        class="text-red-600 hover:text-red-800 text-xl leading-none font-bold">&times;</button>
+    </div>
+  <?php endif; ?>
 
   <!-- Container -->
   <div class="bg-white rounded-lg shadow-md flex flex-col md:flex-row overflow-hidden w-full max-w-5xl mx-auto mt-4">

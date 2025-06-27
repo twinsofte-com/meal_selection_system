@@ -12,28 +12,29 @@ $list = [];
 
 switch ($type) {
   case 'issued':
-    $sql = "SELECT staff.staff_id, staff.name, 
-                  IF(staff_meals.dinner_received = 1, 'yes', 'no') AS received,
-                  staff_meals.manual_dinner
+  // All meals (ordered), show ✔ or ✘ based on dinner_received
+  $sql = "SELECT staff.staff_id, staff.name, 
+                 IF(staff_meals.dinner_received = 1, 'yes', 'no') AS received,
+                 staff_meals.manual_dinner
+          FROM staff_meals
+          JOIN staff ON staff.id = staff_meals.staff_id
+          WHERE staff_meals.dinner = 1
+            AND DATE(staff_meals.meal_date) = '$meal_date'";
+  break;
+
+  case 'manual':
+    // Same as issued; UI highlights extras separately
+    $sql = "SELECT staff.staff_id, staff.name,
+                   'yes' AS received,
+                   staff_meals.manual_dinner
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
             WHERE staff_meals.dinner_received = 1
               AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
-
-  case 'manual':
-    // All issued (including extra)
-    $sql = "SELECT staff.staff_id, staff.name,
-                   'yes' AS received,
-                   staff_meals.manual_dinner
-            FROM staff_meals
-            JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.dinner_received = 1 
-              AND DATE(staff_meals.meal_date) = '$meal_date'";
-    break;
-
   case 'pending':
+    // Ordered but not yet received
     $sql = "SELECT staff.staff_id, staff.name, 
                    'no' AS received,
                    staff_meals.manual_dinner
