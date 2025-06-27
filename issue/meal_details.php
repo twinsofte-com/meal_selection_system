@@ -12,15 +12,19 @@ $list = [];
 
 switch ($type) {
   case 'issued':
-  // All meals (ordered), show ✔ or ✘ based on breakfast_received
-  $sql = "SELECT staff.staff_id, staff.name, 
-                 IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received,
-                 staff_meals.manual_breakfast
-          FROM staff_meals
-          JOIN staff ON staff.id = staff_meals.staff_id
-          WHERE staff_meals.breakfast = 1
-            AND DATE(staff_meals.meal_date) = '$meal_date'";
-  break;
+    // All meals (ordered), show ✔ or ✘ based on breakfast_received
+    $sql = "SELECT staff.staff_id, staff.name, 
+               IF(staff_meals.breakfast_received = 1, 'yes', 'no') AS received,
+               staff_meals.manual_breakfast
+        FROM staff_meals
+        JOIN staff ON staff.id = staff_meals.staff_id
+        WHERE DATE(staff_meals.meal_date) = '$meal_date'
+          AND (
+            staff_meals.breakfast = 1 
+            OR (staff_meals.manual_breakfast = 1 AND staff_meals.breakfast_received = 1)
+          )";
+
+    break;
 
   case 'manual':
     // Same as issued; UI highlights extras separately
