@@ -3,6 +3,7 @@
 date_default_timezone_set('Asia/Colombo');
 require '../../admin/db.php';
 include_once '../../admin/include/date.php';
+include_once '../validate_issue_session.php';
 
 $issue_date = date('Y-m-d');
 
@@ -14,10 +15,10 @@ $totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND
 $totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'");
 
 $summary = [
-  'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],  // Displays both issued and total ordered
+  'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],
   'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND meal_date = '$issue_date'")],
   'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast = 1 AND breakfast_received = 0 AND meal_date = '$issue_date'")],
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_breakfast = 1 AND breakfast = 1 AND meal_date = '$issue_date'")],
+  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE breakfast_received = 1 AND manual_breakfast = 1 AND meal_date = '$issue_date'")],
 ];
 ?>
 

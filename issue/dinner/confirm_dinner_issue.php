@@ -8,40 +8,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
     $meal_date = date('Y-m-d');
     $issuer_id = $_SESSION['order_user'] ?? 0;
 
-    // Staff check
+    // Check if staff exists
     $stmt = $conn->prepare("SELECT id, name FROM staff WHERE staff_id = ?");
     $stmt->bind_param("s", $staff_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($staff = $result->fetch_assoc()) {
-        $staff_table_id = $staff['id'];
-    } else {
-        $insert = $conn->prepare("INSERT INTO staff (staff_id, name) VALUES (?, 'Unregistered Staff')");
-        $insert->bind_param("s", $staff_id);
-        $insert->execute();
-        $staff_table_id = $conn->insert_id;
+    if ($result->num_rows === 0) {
+        // STOP and show error if staff is not registered
+        echo "Staff not registered. Please contact HR to register.";
+        exit;
     }
 
-    // Check if dinner was ordered
-    $ordered = false;
+    $staff = $result->fetch_assoc();
+    $staff_table_id = $staff['id'];
+
+    // Check if dinner was pre-ordered
     $check = $conn->prepare("SELECT dinner FROM staff_meals WHERE staff_id = ? AND meal_date = ?");
     $check->bind_param("is", $staff_table_id, $meal_date);
     $check->execute();
     $res = $check->get_result();
-    if ($res->num_rows > 0 && $res->fetch_assoc()['dinner'] == 1) {
+
+    $ordered = false;
+    if ($res->num_rows > 0 && (int)$res->fetch_assoc()['dinner'] === 1) {
         $ordered = true;
     }
 
-    // Insert/update dinner record
+    // Set manual_dinner = 1 only if not pre-ordered
     $manual_flag = $ordered ? 0 : 1;
-    $insert = $conn->prepare("INSERT INTO staff_meals (staff_id, meal_date, dinner, dinner_received, manual_dinner)
-                              VALUES (?, ?, 1, 1, ?)
-                              ON DUPLICATE KEY UPDATE dinner_received = 1, manual_dinner = VALUES(manual_dinner)");
+
+    // Insert or update staff_meals
+    $insert = $conn->prepare("
+        INSERT INTO staff_meals (staff_id, meal_date, dinner, dinner_received, manual_dinner)
+        VALUES (?, ?, 1, 1, ?)
+        ON DUPLICATE KEY UPDATE 
+            dinner_received = 1,
+            manual_dinner = VALUES(manual_dinner)
+    ");
     $insert->bind_param("isi", $staff_table_id, $meal_date, $manual_flag);
     $insert->execute();
 
-    // Log issuance
+    // Log the issuance
     $method = 'manual';
     $log = $conn->prepare("INSERT INTO meal_issuance_log (staff_id, meal_type, issued_by, method)
                            VALUES (?, 'dinner', ?, ?)");

@@ -1,7 +1,9 @@
 <?php
+/** @var \mysqli $conn */
 date_default_timezone_set('Asia/Colombo');
 require '../../admin/db.php';
 include_once '../../admin/include/date.php';
+include_once '../validate_issue_session.php';
 
 $issue_date = date('Y-m-d');
 
@@ -15,7 +17,7 @@ $summary = [
   'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],
   'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND meal_date = '$issue_date'")],
   'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner = 1 AND dinner_received = 0 AND meal_date = '$issue_date'")],
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND manual_dinner = 1 AND dinner = 1 AND meal_date = '$issue_date'")],
+  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE dinner_received = 1 AND manual_dinner = 1 AND meal_date = '$issue_date'")],
 ];
 
 $meal_type = 'Dinner';

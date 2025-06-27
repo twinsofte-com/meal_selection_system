@@ -1,10 +1,6 @@
 <?php
-session_start();
-if (!isset($_SESSION['issue_user'])) {
-    header("Location: issue_login.php");
-    exit;
-}
 include_once '../admin/include/date.php';
+include_once 'validate_issue_session_index.php';
 
 $todayDate = date("Y-m-d");
 $dayOfWeek = date("l");

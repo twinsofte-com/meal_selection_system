@@ -11,7 +11,7 @@ if (empty($qr)) {
 }
 
 // Prepare and execute staff lookup
-$stmt = $conn->prepare("SELECT staff_id, name FROM staff WHERE qr_code = ?");
+$stmt = $conn->prepare("SELECT id, staff_id, name FROM staff WHERE qr_code = ?");
 if (!$stmt) {
     echo json_encode(['error' => 'DB prepare error']);
     exit;
@@ -21,20 +21,24 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if (!$result || $result->num_rows === 0) {
-    echo json_encode(['error' => 'Staff not found']);
+    // Staff not registered
+    echo json_encode(['error' => 'Staff not registered. Please contact HR to register.']);
     exit;
 }
 
 $staff = $result->fetch_assoc();
+$staff_table_id = $staff['id'];
+$staff_id = $staff['staff_id'];
+$staff_name = $staff['name'];
 
-// Prepare and execute breakfast check
+// Check breakfast issuance
 $today = date('Y-m-d');
 $stmt2 = $conn->prepare("SELECT breakfast_received FROM staff_meals WHERE staff_id = ? AND meal_date = ?");
 if (!$stmt2) {
     echo json_encode(['error' => 'DB prepare error (breakfast check)']);
     exit;
 }
-$stmt2->bind_param("ss", $staff['staff_id'], $today);
+$stmt2->bind_param("is", $staff_table_id, $today);
 $stmt2->execute();
 $mealResult = $stmt2->get_result();
 
@@ -45,8 +49,8 @@ if ($mealResult && $mealResult->num_rows > 0) {
 }
 
 echo json_encode([
-    'staff_id' => $staff['staff_id'],
-    'name' => $staff['name'],
+    'staff_id' => $staff_id,
+    'name' => $staff_name,
     'breakfast_received' => $breakfast_received
 ]);
 exit;

@@ -20,9 +20,9 @@ $stmt = $conn->prepare("
         sm.manual_breakfast,
         sm.manual_lunch,
         sm.manual_dinner,
-        (SELECT confirmed FROM meal_issuance WHERE staff_id = sm.staff_id AND meal_type = 'breakfast' AND meal_date = sm.meal_date) AS breakfast_received,
-        (SELECT confirmed FROM meal_issuance WHERE staff_id = sm.staff_id AND meal_type = 'lunch' AND meal_date = sm.meal_date) AS lunch_received,
-        (SELECT confirmed FROM meal_issuance WHERE staff_id = sm.staff_id AND meal_type = 'dinner' AND meal_date = sm.meal_date) AS dinner_received
+        sm.breakfast_received,
+        sm.lunch_received,
+        sm.dinner_received
     FROM staff_meals sm
     JOIN staff s ON sm.staff_id = s.id
     WHERE sm.meal_date = ?
@@ -97,7 +97,7 @@ $result = $stmt->get_result();
                 <?= $row['breakfast'] ? '✅' : '❌' ?>
                 <?= $row['manual_breakfast'] ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-1">Extra</span>' : '' ?>
               </td>
-              <td class="px-4 py-2 border text-center"><?= $row['breakfast_received'] ? '🎯' : '🕓' ?></td>
+              <td class="px-4 py-2 border text-center"><?= $row['breakfast_received'] ? '🍜' : '🕓' ?></td>
             <?php endif; ?>
 
             <?php if ($filter === 'all' || $filter === 'lunch'): ?>
@@ -105,7 +105,7 @@ $result = $stmt->get_result();
                 <?= $row['lunch'] ? '✅' : '❌' ?>
                 <?= $row['manual_lunch'] ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-1">Extra</span>' : '' ?>
               </td>
-              <td class="px-4 py-2 border text-center"><?= $row['lunch_received'] ? '🎯' : '🕓' ?></td>
+              <td class="px-4 py-2 border text-center"><?= $row['lunch_received'] ? '🍜' : '🕓' ?></td>
             <?php endif; ?>
 
             <?php if ($filter === 'all' || $filter === 'dinner'): ?>
@@ -113,7 +113,7 @@ $result = $stmt->get_result();
                 <?= $row['dinner'] ? '✅' : '❌' ?>
                 <?= $row['manual_dinner'] ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded ml-1">Extra</span>' : '' ?>
               </td>
-              <td class="px-4 py-2 border text-center"><?= $row['dinner_received'] ? '🎯' : '🕓' ?></td>
+              <td class="px-4 py-2 border text-center"><?= $row['dinner_received'] ? '🍜' : '🕓' ?></td>
             <?php endif; ?>
           </tr>
         <?php endwhile; ?>

@@ -1,26 +1,42 @@
 <?php
+/** @var \mysqli $conn */
 date_default_timezone_set('Asia/Colombo');
 require '../../admin/db.php';
 include_once '../../admin/include/date.php';
+include_once '../validate_issue_session.php';
 
 $issue_date = date('Y-m-d');
 
-// Count function for lunch
+// Count function
 $q = fn($sql) => (int) ($conn->query($sql)->fetch_assoc()['cnt'] ?? 0);
 
-$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch = 1 AND meal_date = '$issue_date'");
-$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND meal_date = '$issue_date'");
+// ✅ Only count pre-ordered meals that are not already issued
+$totalOrdered = $q("SELECT COUNT(*) cnt FROM staff_meals 
+                    WHERE lunch = 1 
+                      AND (lunch_received = 0 OR manual_lunch = 1) 
+                      AND meal_date = '$issue_date'");
+
+// ✅ Total issued lunch meals (manual or pre-ordered)
+$totalIssued = $q("SELECT COUNT(*) cnt FROM staff_meals 
+                   WHERE lunch_received = 1 
+                     AND meal_date = '$issue_date'");
+
+// ✅ Only show balance of remaining pre-orders (excluding extra issued)
+$balance = $q("SELECT COUNT(*) cnt FROM staff_meals 
+               WHERE lunch = 1 
+                 AND lunch_received = 0 
+                 AND meal_date = '$issue_date'");
 
 $summary = [
-  'issued' => ['value' => $totalIssued, 'total' => $totalOrdered],
-  'manual' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND meal_date = '$issue_date'")],
-  'pending' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch = 1 AND lunch_received = 0 AND meal_date = '$issue_date'")],
-  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND manual_lunch = 1 AND lunch = 1 AND meal_date = '$issue_date'")],
+  'issued' => ['value' => $balance, 'total' => $totalOrdered], // Balance / Total
+  'manual' => ['value' => $totalIssued], // All issued (pre + extra)
+  'pending' => ['value' => $balance], // Same as balance
+  'extra' => ['value' => $q("SELECT COUNT(*) cnt FROM staff_meals WHERE lunch_received = 1 AND manual_lunch = 1 AND meal_date = '$issue_date'")],
+
 ];
 
 $meal_type = 'Lunch';
 $confirm_script = 'confirm_lunch_issue.php';
-// include '../include/issue_template.php'; // reuse template if exists
 ?>
 
 <!DOCTYPE html>
@@ -182,7 +198,7 @@ $confirm_script = 'confirm_lunch_issue.php';
 
     document.getElementById('confirmYes').addEventListener('click', function () {
       if (!currentStaffId) return;
-      fetch('./confirm_breakfast_issue.php', {
+      fetch('confirm_lunch_issue.php', {
         method: 'POST',
         body: new URLSearchParams({
           staff_id: currentStaffId,
@@ -232,19 +248,17 @@ $confirm_script = 'confirm_lunch_issue.php';
             detailList.innerHTML = `<li class="text-gray-500 italic">No records found.</li>`;
           } else {
             detailList.innerHTML = data.map(item => {
-              const isExtra = parseInt(item.manual_breakfast) === 1 && item.received === 'yes';
+              const isExtra = parseInt(item.manual_lunch) === 1 && item.received === 'yes';
 
               const tag = isExtra
                 ? '<span class="ml-2 text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Extra</span>'
                 : '';
 
-              return `<li class="border p-2 rounded bg-gray-50 ${isExtra ? 'text-red-600 font-bold' : 'text-gray-800'}">
-                ${item.staff_id} — ${item.name} ${tag}
-                <span class="font-bold float-right">${item.received === 'yes' ? '✔' : '✘'}</span>
-              </li>`;
+              return `<li class="border p-2 rounded bg-gray-50 flex justify-between items-center ${isExtra ? 'text-red-600 font-bold' : 'text-gray-800'}">
+            <span>${item.staff_id} — ${item.name} ${tag}</span>
+            <span class="font-bold">${item.received === 'yes' ? '✔' : '✘'}</span>
+          </li>`;
             }).join('');
-
-
           }
 
           detailTitle.innerHTML = `<span class="${colors[type]}">${titles[type]}</span>`;
@@ -258,6 +272,7 @@ $confirm_script = 'confirm_lunch_issue.php';
           detailModal.classList.add('flex');
         });
     }
+
 
     function closeDetailModal() {
       document.getElementById('detailModal').classList.add('hidden');

@@ -13,18 +13,17 @@ $list = [];
 switch ($type) {
   case 'issued':
     $sql = "SELECT staff.staff_id, staff.name, 
-                   IF(staff_meals.dinner_received = 1, 'yes', 'no') AS received,
-                   staff_meals.manual_dinner
+                  IF(staff_meals.dinner_received = 1, 'yes', 'no') AS received,
+                  staff_meals.manual_dinner
             FROM staff_meals
             JOIN staff ON staff.id = staff_meals.staff_id
-            WHERE staff_meals.dinner = 1
-              AND staff_meals.manual_dinner = 0
+            WHERE staff_meals.dinner_received = 1
               AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
 
-
   case 'manual':
+    // All issued (including extra)
     $sql = "SELECT staff.staff_id, staff.name,
                    'yes' AS received,
                    staff_meals.manual_dinner
@@ -46,6 +45,7 @@ switch ($type) {
     break;
 
   case 'extra':
+    // ✅ Fixed: Removed `AND dinner = 1`
     $sql = "SELECT staff.staff_id, staff.name,
                    'yes' AS received,
                    staff_meals.manual_dinner
@@ -53,7 +53,6 @@ switch ($type) {
             JOIN staff ON staff.id = staff_meals.staff_id
             WHERE staff_meals.dinner_received = 1 
               AND staff_meals.manual_dinner = 1 
-              AND staff_meals.dinner = 1 
               AND DATE(staff_meals.meal_date) = '$meal_date'";
     break;
 
