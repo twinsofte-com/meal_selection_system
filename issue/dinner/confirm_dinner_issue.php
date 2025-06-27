@@ -30,23 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
     $res = $check->get_result();
 
     $ordered = false;
-    if ($res->num_rows > 0 && (int)$res->fetch_assoc()['dinner'] === 1) {
+    if ($res->num_rows > 0 && (int) $res->fetch_assoc()['dinner'] === 1) {
         $ordered = true;
     }
 
     // Set manual_dinner = 1 only if not pre-ordered
     $manual_flag = $ordered ? 0 : 1;
 
-    // Insert or update staff_meals
+    $today_date = date('Y-m-d'); // Or use date('Y-m-d H:i:s') if your `date` column is DATETIME
+
+    // Insert or update staff_meals for dinner
     $insert = $conn->prepare("
-        INSERT INTO staff_meals (staff_id, meal_date, dinner, dinner_received, manual_dinner)
-        VALUES (?, ?, 1, 1, ?)
-        ON DUPLICATE KEY UPDATE 
-            dinner_received = 1,
-            manual_dinner = VALUES(manual_dinner)
-    ");
-    $insert->bind_param("isi", $staff_table_id, $meal_date, $manual_flag);
+    INSERT INTO staff_meals (staff_id, meal_date, dinner, dinner_received, manual_dinner, date)
+    VALUES (?, ?, 1, 1, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+        dinner_received = 1,
+        manual_dinner = VALUES(manual_dinner),
+        date = VALUES(date)
+");
+    $insert->bind_param("isis", $staff_table_id, $meal_date, $manual_flag, $today_date);
     $insert->execute();
+
 
     // Log the issuance
     $method = 'manual';

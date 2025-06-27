@@ -30,21 +30,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
     $check->execute();
     $res = $check->get_result();
 
-    if ($res->num_rows > 0 && (int)$res->fetch_assoc()['lunch'] === 1) {
+    if ($res->num_rows > 0 && (int) $res->fetch_assoc()['lunch'] === 1) {
         $ordered = true;
     }
 
     $manual_flag = $ordered ? 0 : 1;
 
     // Insert or update the lunch record
+    $today_date = date('Y-m-d'); // Or use date('Y-m-d H:i:s') if your `date` column is datetime
+
     $insert = $conn->prepare("
-        INSERT INTO staff_meals (staff_id, meal_date, lunch, lunch_received, manual_lunch)
-        VALUES (?, ?, 1, 1, ?)
-        ON DUPLICATE KEY UPDATE 
-            lunch_received = 1,
-            manual_lunch = VALUES(manual_lunch)
-    ");
-    $insert->bind_param("isi", $staff_table_id, $meal_date, $manual_flag);
+    INSERT INTO staff_meals (staff_id, meal_date, lunch, lunch_received, manual_lunch, date)
+    VALUES (?, ?, 1, 1, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+        lunch_received = 1,
+        manual_lunch = VALUES(manual_lunch),
+        date = VALUES(date)
+");
+    $insert->bind_param("isis", $staff_table_id, $meal_date, $manual_flag, $today_date);
+
     $insert->execute();
 
     // Log issuance

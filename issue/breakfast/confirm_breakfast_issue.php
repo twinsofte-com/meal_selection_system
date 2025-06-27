@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
 
     if ($res->num_rows > 0) {
         $row = $res->fetch_assoc();
-        if ((int)$row['breakfast'] === 1) {
+        if ((int) $row['breakfast'] === 1) {
             $ordered = true;
         }
     }
@@ -40,14 +40,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['staff_id'])) {
     // Set manual flag to 1 if not ordered
     $manual_flag = $ordered ? 0 : 1;
 
+    $today_date = date('Y-m-d'); // Or use 'Y-m-d H:i:s' if your `date` column is DATETIME
+
     // Insert or update the breakfast record
-    $insert = $conn->prepare("INSERT INTO staff_meals (staff_id, meal_date, breakfast, breakfast_received, manual_breakfast)
-                              VALUES (?, ?, 1, 1, ?)
-                              ON DUPLICATE KEY UPDATE 
-                                  breakfast_received = 1,
-                                  manual_breakfast = VALUES(manual_breakfast)");
-    $insert->bind_param("isi", $staff_table_id, $meal_date, $manual_flag);
+    $insert = $conn->prepare("
+    INSERT INTO staff_meals (staff_id, meal_date, breakfast, breakfast_received, manual_breakfast, date)
+    VALUES (?, ?, 1, 1, ?, ?)
+    ON DUPLICATE KEY UPDATE 
+        breakfast_received = 1,
+        manual_breakfast = VALUES(manual_breakfast),
+        date = VALUES(date)
+");
+    $insert->bind_param("isis", $staff_table_id, $meal_date, $manual_flag, $today_date);
     $insert->execute();
+
 
     // Log the issuance
     $method = 'manual';
