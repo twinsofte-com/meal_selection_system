@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       >
 
       <button type="submit"
-              class="w-full bg-[--primary-red] hover:bg-[--primary-blue] text-white font-bold py-2 rounded-lg transition duration-300">
+              class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg transition duration-300">
         Login / පිවිසෙන්න
       </button>
     </form>

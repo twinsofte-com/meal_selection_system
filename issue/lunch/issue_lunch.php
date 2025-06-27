@@ -56,6 +56,14 @@ $confirm_script = 'confirm_lunch_issue.php';
 </head>
 
 <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col p-2">
+  <!-- Top Navigation -->
+  <div class="flex justify-between items-center w-full max-w-5xl mx-auto mt-4">
+    <h1 class="text-xl font-bold text-gray-700">Lunch Issuance</h1>
+    <a href="../dashboard.php" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+      ⬅ Back to Dashboard
+    </a>
+  </div>
+
 
   <!-- Alert -->
   <div id="alertBox"
