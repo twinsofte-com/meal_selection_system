@@ -175,7 +175,7 @@ $confirm_script = 'confirm_dinner_issue.php';
     const MEAL_TYPE = 'dinner';
     const CONFIRM_SCRIPT = 'confirm_dinner_issue.php';
   </script>
-  <script src="../js/qrcode.js"></script>
+  <script src="../js/qrcode.js?v=<?= time(); ?>"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
