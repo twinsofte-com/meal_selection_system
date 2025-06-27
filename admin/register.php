@@ -1,4 +1,5 @@
 <?php
+include_once 'validation/validation.php';
 require_once '../phpqrcode/qrlib.php';
 require_once 'db.php';
 include_once 'include/date.php';
@@ -298,6 +299,8 @@ function addTextToQRCode($file, $text) {
   </div>
 </div>
 
+<!-- Footer -->
+<?php include 'include/footer.php'; ?>
 
 <script>
   function openQrUploadModal(staffId) {

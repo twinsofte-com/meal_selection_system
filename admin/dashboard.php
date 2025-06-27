@@ -1,38 +1,50 @@
 <?php
+include_once 'validation/validation.php';
 include_once '../phpqrcode/qrlib.php';
 require_once 'db.php';
 include_once 'include/date.php';
 
-// Get meal counts for Lunch and Dinner
-$lunch_count_query = "SELECT COUNT(*) AS lunch_count FROM meal_issuance WHERE meal_type = 'Lunch' AND confirmed = 1 AND meal_date = CURDATE()";
-$lunch_count_result = $conn->query($lunch_count_query);
-$lunch_count = $lunch_count_result->fetch_assoc()['lunch_count'];
+$today = date('Y-m-d');
+$yesterday = date('Y-m-d', strtotime('-1 day'));
+$tomorrow = date('Y-m-d', strtotime('+1 day'));
 
-$dinner_count_query = "SELECT COUNT(*) AS dinner_count FROM meal_issuance WHERE meal_type = 'Dinner' AND confirmed = 1 AND meal_date = CURDATE()";
-$dinner_count_result = $conn->query($dinner_count_query);
-$dinner_count = $dinner_count_result->fetch_assoc()['dinner_count'];
+// Count from staff_meals
+function getStaffMealCount($conn, $column, $date) {
+    $sql = "SELECT COUNT(*) AS count FROM staff_meals WHERE DATE(meal_date) = ? AND $column = 1";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    return (int)$res['count'];
+}
+// Standard meal counts
+$lunchToday         = getStaffMealCount($conn, 'lunch', $today);
+$dinnerToday        = getStaffMealCount($conn, 'dinner', $today);
+$breakfastTomorrow  = getStaffMealCount($conn, 'breakfast', $tomorrow);
 
-// Handle staff registration via POST
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$lunchYest          = getStaffMealCount($conn, 'lunch', $yesterday);
+$dinnerYest         = getStaffMealCount($conn, 'dinner', $yesterday);
+$breakfastYest      = getStaffMealCount($conn, 'breakfast', $yesterday);
+
+// Extra (manual) meal counts for today only
+$extraBreakfast = getStaffMealCount($conn, 'manual_breakfast', $today);
+$extraLunch     = getStaffMealCount($conn, 'manual_lunch', $today);
+$extraDinner    = getStaffMealCount($conn, 'manual_dinner', $today);
+
+// Staff registration
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $staff_type = $_POST['staff_type'];
     $staff_id = $_POST['staff_id'];
     $name = $_POST['name'];
     $phone = $_POST['phone'];
 
-    $full_id = $staff_id;
-    $default_preferences = '';
-    $empty_qr_value = '';
-
-    $stmt = $conn->prepare("INSERT INTO staff (staff_id, staff_type, name, phone_number, qr_code, meal_preferences) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $full_id, $staff_type, $name, $phone, $empty_qr_value, $default_preferences);
+    $stmt = $conn->prepare("INSERT INTO staff (staff_id, staff_type, name, phone_number, qr_code, meal_preferences) VALUES (?, ?, ?, ?, '', '')");
+    $stmt->bind_param("ssss", $staff_id, $staff_type, $name, $phone);
     $stmt->execute();
     $stmt->close();
-
     echo "<script>alert('Staff registered successfully!'); window.location='dashboard.php';</script>";
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,130 +52,149 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard - MEAL ORDER APP</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="text-gray-800 font-sans">
+<?php include 'include/topbar.php'; ?>
 
-  <!-- Top Section -->
-  <?php include 'include/topbar.php'; ?>
+<!-- Action Buttons -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+  <button onclick="openRegisterModal()" class="bg-[#ED1B24] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg">Register</button>
+  <a href="register.php" class="bg-[#2E3095] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg text-center">List</a>
+  <a href="manual_order.php" class="bg-[#2E3095] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg text-center">Manual Order</a>
+</div>
 
-  <!-- Main Actions -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-    <button onclick="openRegisterModal()" class="bg-[#ED1B24] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg">Register</button>
-    <a href="register.php" class="bg-[#2E3095] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg text-center">List</a>
-    <a href="manual_order.php" class="bg-[#2E3095] text-white p-6 rounded-2xl text-xl shadow hover:shadow-lg text-center">Manual Order</a>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-6">
+  <div class="border-l-4 border-[#ED1B24] p-4 bg-white shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-[#ED1B24]">Today Lunch</h2>
+    <p class="text-2xl font-bold"><?= $lunchToday ?> meals ordered</p>
   </div>
-
-  <!-- Order Summary -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 pb-10">
-    <div class="border-l-4 border-[#ED1B24] p-4 bg-white shadow rounded-xl">
-      <h2 class="text-lg font-semibold text-[#ED1B24]">Today Lunch</h2>
-      <p class="text-2xl font-bold"><?php echo $lunch_count; ?> meals ordered</p>
-    </div>
-    <div class="border-l-4 border-[#2E3095] p-4 bg-white shadow rounded-xl">
-      <h2 class="text-lg font-semibold text-[#2E3095]">Today Dinner</h2>
-      <p class="text-2xl font-bold"><?php echo $dinner_count; ?> meals ordered</p>
-    </div>
+  <div class="border-l-4 border-[#2E3095] p-4 bg-white shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-[#2E3095]">Today Dinner</h2>
+    <p class="text-2xl font-bold"><?= $dinnerToday ?> meals ordered</p>
   </div>
-
-  <!-- Register Modal -->
-  <div id="registerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl w-full max-w-md p-6 relative">
-      <h3 class="text-xl font-semibold text-[#2E3095] mb-4">Register New Staff</h3>
-      <form method="POST" action="">
-        <div class="mb-4">
-          <label class="block text-gray-700">Staff Type</label>
-          <select name="staff_type" id="staff_type" required class="w-full border p-2 rounded-lg">
-              <option value="ECW">ECW (Internal)</option>
-              <option value="INT">INT (External)</option>
-          </select>
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-700">Staff ID</label>
-          <div class="flex">
-              <span id="prefix" class="flex items-center px-3 bg-gray-100 border border-r-0 rounded-l-lg">ECW-</span>
-              <input type="text" id="staff_id_input" class="flex-1 border rounded-r-lg p-2" required />
-          </div>
-          <input type="hidden" name="staff_id" id="full_staff_id" />
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-700">Name</label>
-          <input type="text" name="name" required class="w-full border p-2 rounded-lg" />
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-gray-700">Phone Number</label>
-          <input type="text" name="phone" required class="w-full border p-2 rounded-lg" />
-        </div>
-
-        <div class="flex justify-end">
-          <button type="submit" class="bg-[#2E3095] text-white px-4 py-2 rounded-lg hover:bg-[#1d2475]">Register</button>
-        </div>
-      </form>
-      <button class="absolute top-2 right-2 text-xl" onclick="closeRegisterModal()">&times;</button>
-    </div>
-  </div>
-
-  <!-- Manual Order Modal -->
-<div id="manualModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
-  <div class="bg-white w-11/12 max-w-md rounded-lg shadow-lg p-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Manual Order</h2>
-    <form action="order_process.php" method="POST" onsubmit="return handleManualSubmit(this)">
-      <label class="block mb-2 font-medium">Enter Staff ID</label>
-      <input type="text" name="staff_id" class="w-full px-3 py-2 border border-gray-300 rounded mb-4" required>
-
-      <label class="block mb-2 font-medium">Select Meals</label>
-      <div class="flex space-x-3 mb-4">
-        <label class="inline-flex items-center">
-          <input type="checkbox" name="meals[]" value="Breakfast" class="mr-2"> Breakfast
-        </label>
-        <label class="inline-flex items-center">
-          <input type="checkbox" name="meals[]" value="Lunch" class="mr-2"> Lunch
-        </label>
-        <label class="inline-flex items-center">
-          <input type="checkbox" name="meals[]" value="Dinner" class="mr-2"> Dinner
-        </label>
-      </div>
-
-      <label class="inline-flex items-center mb-4">
-        <input type="checkbox" name="vegetarian" value="1" class="mr-2"> Vegetarian
-      </label>
-
-      <div class="flex justify-between">
-        <button type="button" onclick="closeManualModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Submit</button>
-      </div>
-    </form>
+  <div class="border-l-4 border-green-600 p-4 bg-white shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-green-700">Tomorrow Breakfast</h2>
+    <p class="text-2xl font-bold"><?= $breakfastTomorrow ?> meals ordered</p>
   </div>
 </div>
 
+<!-- Extra Meal Orders -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-6">
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-yellow-700">Extra Breakfast Orders</h2>
+    <p class="text-2xl font-bold"><?= $extraBreakfast ?> meals</p>
+  </div>
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-yellow-700">Extra Lunch Orders</h2>
+    <p class="text-2xl font-bold"><?= $extraLunch ?> meals</p>
+  </div>
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 shadow rounded-xl">
+    <h2 class="text-lg font-semibold text-yellow-700">Extra Dinner Orders</h2>
+    <p class="text-2xl font-bold"><?= $extraDinner ?> meals</p>
+  </div>
+</div>
 
-  <script>
-    function openRegisterModal() {
-      document.getElementById("registerModal").classList.remove("hidden");
+<!-- Chart -->
+<div class="px-6 pb-12">
+  <canvas id="mealChart" height="100"></canvas>
+</div>
+
+<!-- Export Buttons -->
+<!-- <div class="px-6 pb-12 flex gap-4">
+  <a href="exports/weekly_meal_comparison.csv" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Download CSV</a>
+  <a href="exports/weekly_meal_comparison.pdf" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Download PDF</a>
+</div> -->
+
+<!-- Footer -->
+<?php include 'include/footer.php'; ?>
+<!-- Chart Script -->
+<script>
+  const ctx = document.getElementById('mealChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Yesterday', 'Today'],
+      datasets: [
+        {
+          label: 'Breakfast',
+          data: [<?= $breakfastYest ?>, <?= $breakfastTomorrow ?>],
+          backgroundColor: '#34D399', // teal
+          borderRadius: 6,
+          barPercentage: 0.5,
+          categoryPercentage: 0.5
+        },
+        {
+          label: 'Lunch',
+          data: [<?= $lunchYest ?>, <?= $lunchToday ?>],
+          backgroundColor: '#EF4444', // red
+          borderRadius: 6,
+          barPercentage: 0.5,
+          categoryPercentage: 0.5
+        },
+        {
+          label: 'Dinner',
+          data: [<?= $dinnerYest ?>, <?= $dinnerToday ?>],
+          backgroundColor: '#6366F1', // indigo
+          borderRadius: 6,
+          barPercentage: 0.5,
+          categoryPercentage: 0.5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: 'Meal Orders Comparison (Breakfast, Lunch, Dinner)',
+          font: {
+            size: 18
+          }
+        },
+        tooltip: {
+          backgroundColor: '#111827',
+          titleFont: { weight: 'bold' },
+          bodyFont: { size: 14 }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: { size: 14 }
+          },
+          title: {
+            display: true,
+            text: 'Number of Orders',
+            font: { size: 16 }
+          }
+        },
+        x: {
+          ticks: {
+            font: { size: 14 }
+          }
+        }
+      },
+      animation: {
+        duration: 800,
+        easing: 'easeOutBounce'
+      }
     }
+  });
+</script>
 
-    function closeRegisterModal() {
-      document.getElementById("registerModal").classList.add("hidden");
-    }
-
-    const staffType = document.getElementById('staff_type');
-    const staffIdInput = document.getElementById('staff_id_input');
-    const fullStaffId = document.getElementById('full_staff_id');
-    const prefix = document.getElementById('prefix');
-
-    function updateStaffId() {
-        const type = staffType.value;
-        prefix.innerText = type + '-';
-        fullStaffId.value = `${type}-${staffIdInput.value}`;
-    }
-
-    staffType.addEventListener('change', updateStaffId);
-    staffIdInput.addEventListener('input', updateStaffId);
-
-    
-  </script>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 <?php
-session_start();
+include_once 'validation/validation.php';
 include 'db.php';
 include_once 'include/date.php';
 
@@ -208,7 +208,9 @@ $result_tomorrow = mysqli_query($conn, $query_tomorrow);
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Footer -->
+<?php include 'include/footer.php'; ?>
+
 <!-- Scripts -->
 <script>
   function confirmManual() {

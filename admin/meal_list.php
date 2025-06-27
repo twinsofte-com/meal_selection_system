@@ -1,10 +1,5 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: index.php');
-    exit;
-}
-
+include_once 'validation/validation.php';
 require_once 'db.php';
 include_once 'include/date.php';
 
@@ -107,9 +102,8 @@ $result = $stmt->get_result();
   </div>
 </div>
 
-<footer class="bg-blue-600 text-white text-center py-3 mt-8">
-  Powered by Twinsofte.com. All rights reserved.
-</footer>
+<!-- Footer -->
+<?php include 'include/footer.php'; ?>
 
 </body>
 </html>

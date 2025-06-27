@@ -2,12 +2,13 @@
 require_once '../admin/db.php';
 include_once '../admin/include/date.php';
 session_start();
+
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pin = trim($_POST['pin_code']);
 
-    $stmt = $conn->prepare("SELECT * FROM pin_users WHERE pin_code = ? AND role = 'order'");
+    $stmt = $conn->prepare("SELECT * FROM order_pins WHERE pin_code = ?");
     $stmt->bind_param("s", $pin);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -15,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user) {
         $_SESSION['order_user'] = $user['id'];
-        header("Location: dashboard.php");
+        header("Location: dashboard.php"); // Redirect to order dashboard
         exit;
     } else {
         $error = "Invalid PIN. Please try again. | වැරදි පින් කේතයකි. නැවත උත්සහ කරන්න.";
@@ -44,8 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border-t-8 border-red-600">
     <div class="text-center mb-6">
       <img src="../img/logo.png" alt="Logo" class="w-16 h-16 mx-auto mb-3">
-      <h1 class="text-2xl font-extrabold text-[--primary-blue]">Order Login<br><span class="text-sm text-gray-600">ඇනවුම් පිවිසුම</span></h1>
-      <p class="text-sm text-gray-600">Enter your PIN code below<br><span class="text-xs text-gray-500">ඔබේ පින් කේතය ඇතුළත් කරන්න</span></p>
+      <h1 class="text-2xl font-extrabold text-blue-600">Order Login<br>
+        <span class="text-sm text-gray-600">ඇනවුම් පිවිසුම</span>
+      </h1>
+      <p class="text-sm text-gray-600">
+        Enter your PIN code below<br>
+        <span class="text-xs text-gray-500">ඔබේ පින් කේතය ඇතුළත් කරන්න</span>
+      </p>
     </div>
 
     <?php if ($error): ?>
@@ -61,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         maxlength="10"
         required
         placeholder="PIN / පින් කේතය"
-        class="w-full px-4 py-3 border-2 border-[--primary-blue] rounded-lg text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-[--primary-red]"
+        class="w-full px-4 py-3 border-2 border-blue-600 rounded-lg text-center text-xl tracking-widest focus:outline-none focus:ring-2 focus:ring-red-600"
       >
 
       <button type="submit"
@@ -71,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="text-center mt-6">
-      <a href="../index.php" class="text-sm text-[--primary-blue] hover:underline">
+      <a href="../index.php" class="text-sm text-blue-600 hover:underline">
         ← Back to Main Page / ප්‍රධාන පිටුවට
       </a>
     </div>

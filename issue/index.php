@@ -2,12 +2,14 @@
 require_once '../admin/db.php';
 include_once '../admin/include/date.php';
 session_start();
+
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pin = trim($_POST['pin_code']);
 
-    $stmt = $conn->prepare("SELECT * FROM pin_users WHERE pin_code = ? AND role = 'issue'");
+    // Correct table for issue login
+    $stmt = $conn->prepare("SELECT * FROM issue_pins WHERE pin_code = ?");
     $stmt->bind_param("s", $pin);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -15,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user) {
         $_SESSION['issue_user'] = $user['id'];
-        header("Location: dashboard.php");
+        header("Location: dashboard.php"); // You can change this to issue_dashboard.php if needed
         exit;
     } else {
         $error = "Invalid PIN. Please try again. | වැරදි පින් කේතයකි. නැවත උත්සහ කරන්න.";
@@ -24,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,8 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border-t-8 border-red-600">
     <div class="text-center mb-6">
       <img src="../img/logo.png" alt="Logo" class="w-16 h-16 mx-auto mb-3">
-      <h1 class="text-2xl font-extrabold text-[--primary-blue]">Issue Login<br><span class="text-sm text-gray-600">ආහාර නිකුත් පිවිසුම</span></h1>
-      <p class="text-sm text-gray-600">Enter your PIN code below<br><span class="text-xs text-gray-500">ඔබේ පින් කේතය ඇතුළත් කරන්න</span></p>
+      <h1 class="text-2xl font-extrabold text-[--primary-blue]">
+        Issue Login<br><span class="text-sm text-gray-600">ආහාර නිකුත් පිවිසුම</span>
+      </h1>
+      <p class="text-sm text-gray-600">
+        Enter your PIN code below<br>
+        <span class="text-xs text-gray-500">ඔබේ පින් කේතය ඇතුළත් කරන්න</span>
+      </p>
     </div>
 
     <?php if ($error): ?>
