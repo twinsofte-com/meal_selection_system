@@ -2,48 +2,84 @@
 require_once 'db.php';
 require_once '../fpdf/fpdf.php';
 
-$date = $_GET['date'] ?? date('Y-m-d');
+$from = $_GET['from'] ?? date('Y-m-d');
+$to = $_GET['to'] ?? date('Y-m-d');
 $meal = $_GET['meal'] ?? 'all';
 
 $sql = "SELECT 
-            s.name,
-            sm.breakfast,
-            sm.lunch,
-            sm.dinner,
-            sm.manual_breakfast,
-            sm.manual_lunch,
-            sm.manual_dinner,
-            (SELECT confirmed FROM meal_issuance WHERE staff_id = s.id AND meal_type = 'breakfast' AND meal_date = sm.meal_date) AS breakfast_received,
-            (SELECT confirmed FROM meal_issuance WHERE staff_id = s.id AND meal_type = 'lunch' AND meal_date = sm.meal_date) AS lunch_received,
-            (SELECT confirmed FROM meal_issuance WHERE staff_id = s.id AND meal_type = 'dinner' AND meal_date = sm.meal_date) AS dinner_received
-        FROM staff_meals sm
-        JOIN staff s ON s.id = sm.staff_id
-        WHERE sm.meal_date = '$date'
-        ORDER BY s.name";
+    s.name,
+    sm.meal_date,
+    sm.breakfast,
+    sm.lunch,
+    sm.dinner,
+    sm.manual_breakfast,
+    sm.manual_lunch,
+    sm.manual_dinner,
+    sm.egg,
+    sm.chicken,
+    sm.vegetarian,
+    sm.breakfast_received,
+    sm.lunch_received,
+    sm.dinner_received
+FROM staff_meals sm
+JOIN staff s ON s.id = sm.staff_id
+WHERE sm.meal_date BETWEEN '$from' AND '$to'
+ORDER BY sm.meal_date, s.name;
+";
 
 $result = $conn->query($sql);
 if (!$result) {
     die("Error fetching data: " . $conn->error);
 }
 
-// Setup PDF
-$pdf = new FPDF('L', 'mm', 'A4'); // Landscape
-$pdf->SetMargins(10, 15, 10);
-$pdf->AddPage();
-$pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, "Meal Report - " . ucfirst($meal) . " - $date", 0, 1, 'C');
-$pdf->Ln(3);
+$total = 0;
+$total_egg = 0;
+$total_chicken = 0;
+$total_veg = 0;
+$total_breakfast = 0;
+$total_lunch = 0;
+$total_dinner = 0;
 
-// Header Styling
+// extra order
+$total_manual_breakfast = 0;
+$total_manual_lunch = 0;
+$total_manual_dinner = 0;
+
+
+class PDF extends FPDF
+{
+    function Header()
+    {
+        global $from, $to, $meal;
+        $this->SetFont('Arial', 'B', 14);
+        $this->SetTextColor(40, 40, 40);
+        $this->Cell(0, 10, "Meal Report - " . ucfirst($meal) . " | From $from to $to", 0, 1, 'C');
+        $this->Ln(2);
+    }
+    function Footer()
+    {
+        $this->SetY(-15);
+        $this->SetFont('Arial', 'I', 8);
+        $this->SetTextColor(100, 100, 100);
+        $this->Cell(0, 10, 'Downloaded on: ' . date('Y-m-d H:i:s'), 0, 0, 'R');
+    }
+}
+
+$pdf = new PDF('L', 'mm', 'A4');
+$pdf->SetMargins(10, 20, 10);
+$pdf->AddPage();
+
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->SetFillColor(220, 220, 220); // Light gray
+$pdf->SetFillColor(220, 220, 220);
+$pdf->SetTextColor(0, 0, 0);
 $colWidths = [
+    'date' => 25,
     'name' => 50,
     'meal' => 25,
     'received' => 30,
 ];
 
-// Header Row
+$pdf->Cell($colWidths['date'], 10, 'Date', 1, 0, 'C', true);
 $pdf->Cell($colWidths['name'], 10, 'Staff Name', 1, 0, 'C', true);
 if ($meal === 'all' || $meal === 'breakfast') {
     $pdf->Cell($colWidths['meal'], 10, 'Breakfast', 1, 0, 'C', true);
@@ -59,59 +95,73 @@ if ($meal === 'all' || $meal === 'dinner') {
 }
 $pdf->Ln();
 
-// Table Data
 $pdf->SetFont('Arial', '', 10);
+$rowToggle = false;
+
 while ($row = $result->fetch_assoc()) {
+    $rowToggle = !$rowToggle;
+    $pdf->SetFillColor($rowToggle ? 245 : 255, $rowToggle ? 245 : 255, $rowToggle ? 245 : 255);
     $pdf->SetTextColor(0, 0, 0);
-    $pdf->Cell($colWidths['name'], 10, $row['name'], 1);
 
-    // Breakfast
-    if ($meal === 'all' || $meal === 'breakfast') {
-        $text = $row['breakfast'] ? 'Yes' : 'No';
-        if ($row['manual_breakfast']) {
-            $text .= ' (Extra)';
-            $pdf->SetTextColor(255, 0, 0);
-        }
-        $pdf->Cell($colWidths['meal'], 10, $text, 1);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colWidths['received'], 10, $row['breakfast_received'] ? 'Yes' : 'No', 1);
-    }
+    $total++;
+    $total_egg += $row['egg'];
+    $total_chicken += $row['chicken'];
+    $total_veg += $row['vegetarian'];
+    if ($row['breakfast'])
+        $total_breakfast++;
+    if ($row['lunch'])
+        $total_lunch++;
+    if ($row['dinner'])
+        $total_dinner++;
+    // extra order
+    if ($row['manual_breakfast'])
+        $total_manual_breakfast++;
+    if ($row['manual_lunch'])
+        $total_manual_lunch++;
+    if ($row['manual_dinner'])
+        $total_manual_dinner++;
 
-    // Lunch
-    if ($meal === 'all' || $meal === 'lunch') {
-        $text = $row['lunch'] ? 'Yes' : 'No';
-        if ($row['manual_lunch']) {
-            $text .= ' (Extra)';
-            $pdf->SetTextColor(255, 0, 0);
-        }
-        $pdf->Cell($colWidths['meal'], 10, $text, 1);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colWidths['received'], 10, $row['lunch_received'] ? 'Yes' : 'No', 1);
-    }
 
-    // Dinner
-    if ($meal === 'all' || $meal === 'dinner') {
-        $text = $row['dinner'] ? 'Yes' : 'No';
-        if ($row['manual_dinner']) {
-            $text .= ' (Extra)';
-            $pdf->SetTextColor(255, 0, 0);
+    $pdf->Cell($colWidths['date'], 10, $row['meal_date'], 1, 0, 'C', true);
+    $pdf->Cell($colWidths['name'], 10, $row['name'], 1, 0, 'L', true);
+
+    foreach (['breakfast', 'lunch', 'dinner'] as $type) {
+        if ($meal === 'all' || $meal === $type) {
+            $text = $row[$type] ? 'Yes' : 'No';
+            if ($row["manual_$type"]) {
+                $text .= ' (Extra)';
+                $pdf->SetTextColor(225, 10, 0);
+            }
+            $pdf->Cell($colWidths['meal'], 10, $text, 1, 0, 'C', true);
+            $pdf->SetTextColor(0, 128, 0);
+            $pdf->Cell($colWidths['received'], 10, $row[$type . '_received'] ? 'Recived' : 'Pending', 1, 0, 'C', true);
+            $pdf->SetTextColor(0, 0, 0);
         }
-        $pdf->Cell($colWidths['meal'], 10, $text, 1);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colWidths['received'], 10, $row['dinner_received'] ? 'Yes' : 'No', 1);
     }
 
     $pdf->Ln();
 }
 
-// Footer
-$pdf->Ln(5);
-$pdf->SetFont('Arial', 'I', 9);
-$pdf->SetTextColor(100, 100, 100);
-$pdf->Cell(0, 10, 'Downloaded on: ' . date('Y-m-d H:i:s'), 0, 0, 'R');
+$pdf->Ln(6);
+$pdf->SetFillColor(235, 235, 235);
+$pdf->SetTextColor(0, 0, 0);
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(0, 9, "Summary from $from to $to", 0, 1, 'L');
 
-// Output
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(0, 7, "Total Records: $total", 0, 1);
+$pdf->Cell(0, 7, "Breakfast Ordered: $total_breakfast    Lunch Ordered: $total_lunch    Dinner Ordered: $total_dinner", 0, 1);
+$pdf->Cell(0, 7, "Egg: $total_egg    Chicken: $total_chicken    Vegetarian: $total_veg", 0, 1);
+
+// extra order
+$pdf->Ln(2);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 8, "Extra Orders:", 0, 1);
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(0, 7, "Breakfast (Extra): $total_manual_breakfast    Lunch (Extra): $total_manual_lunch    Dinner (Extra): $total_manual_dinner", 0, 1);
+
+
 header('Content-Type: application/pdf');
-header('Content-Disposition: attachment;filename="meal_report_' . $meal . '_' . $date . '.pdf"');
+header('Content-Disposition: attachment;filename="meal_report_' . $meal . '_' . $from . '_to_' . $to . '.pdf"');
 $pdf->Output();
 exit();
