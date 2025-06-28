@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 27, 2025 at 10:37 PM
+-- Generation Time: Jun 28, 2025 at 11:32 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,15 +32,18 @@ CREATE TABLE `admins` (
   `username` varchar(50) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
-  `password` varchar(255) NOT NULL
+  `password` varchar(255) NOT NULL,
+  `role` enum('super_admin','guard_admin','admin') NOT NULL DEFAULT 'admin'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `name`, `email`, `password`) VALUES
-(1, 'admin', 'ECW admin', 'admin@ecw.lk', '$2y$10$2Kt69udia/eejzTd48D2zuiTb90TyXmBVFJU/8Q2xJL5QJONcICXi');
+INSERT INTO `admins` (`id`, `username`, `name`, `email`, `password`, `role`) VALUES
+(1, 'admin', 'ECW admin', 'admin@ecw.lk', '$2y$10$2Kt69udia/eejzTd48D2zuiTb90TyXmBVFJU/8Q2xJL5QJONcICXi', 'admin'),
+(2, 'superadmin', 'Super Admin', 'super@ecw.lk', '$2y$10$2Kt69udia/eejzTd48D2zuiTb90TyXmBVFJU/8Q2xJL5QJONcICXi', 'super_admin'),
+(3, 'guardadmin', 'Guard Room Admin', 'guard@ecw.lk', '$2y$10$2Kt69udia/eejzTd48D2zuiTb90TyXmBVFJU/8Q2xJL5QJONcICXi', 'guard_admin');
 
 -- --------------------------------------------------------
 
@@ -122,6 +125,14 @@ CREATE TABLE `meal_issuance_log` (
   `method` enum('scan','manual') DEFAULT 'scan'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `meal_issuance_log`
+--
+
+INSERT INTO `meal_issuance_log` (`id`, `staff_id`, `meal_type`, `issued_by`, `issued_at`, `method`) VALUES
+(1, 1, 'lunch', 4, '2025-06-28 03:04:41', 'manual'),
+(2, 2, 'lunch', 4, '2025-06-28 03:06:28', 'manual');
+
 -- --------------------------------------------------------
 
 --
@@ -157,6 +168,14 @@ CREATE TABLE `staff` (
   `meal_preferences` set('Breakfast','Lunch','Dinner') DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `staff`
+--
+
+INSERT INTO `staff` (`id`, `staff_id`, `name`, `phone_number`, `staff_type`, `qr_code`, `meal_preferences`) VALUES
+(1, 'ECW-111', 'Test 111', '456453453', 'ECW', 'ECW-111', NULL),
+(2, 'INT-25', 'Test 25', '48454654', 'INT', 'INT-25', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -184,6 +203,49 @@ CREATE TABLE `staff_meals` (
   `issued_by_pin` int(11) DEFAULT NULL,
   `extra_reason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `staff_meals`
+--
+
+INSERT INTO `staff_meals` (`id`, `staff_id`, `meal_date`, `breakfast`, `lunch`, `dinner`, `date`, `egg`, `chicken`, `vegetarian`, `manual_order`, `breakfast_received`, `lunch_received`, `dinner_received`, `manual_breakfast`, `manual_lunch`, `manual_dinner`, `issued_by_pin`, `extra_reason`) VALUES
+(1, 2, '2025-06-28', 0, 0, 1, '2025-06-28', 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, NULL, NULL),
+(2, 2, '2025-06-29', 1, 0, 0, '2025-06-28', 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL),
+(3, 1, '2025-06-28', 0, 1, 1, '2025-06-28', 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `visitor_orders`
+--
+
+CREATE TABLE `visitor_orders` (
+  `id` int(11) NOT NULL,
+  `visitor_name` varchar(100) NOT NULL,
+  `meal_date` date NOT NULL,
+  `breakfast` tinyint(1) DEFAULT 0,
+  `lunch` tinyint(1) DEFAULT 0,
+  `dinner` tinyint(1) DEFAULT 0,
+  `egg` tinyint(1) DEFAULT 0,
+  `chicken` tinyint(1) DEFAULT 0,
+  `vegetarian` tinyint(1) DEFAULT 0,
+  `ordered_by_admin` varchar(100) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `breakfast_received` tinyint(1) DEFAULT 0,
+  `lunch_received` tinyint(1) DEFAULT 0,
+  `dinner_received` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `visitor_orders`
+--
+
+INSERT INTO `visitor_orders` (`id`, `visitor_name`, `meal_date`, `breakfast`, `lunch`, `dinner`, `egg`, `chicken`, `vegetarian`, `ordered_by_admin`, `created_at`, `breakfast_received`, `lunch_received`, `dinner_received`) VALUES
+(1, 'Nasran', '2025-06-28', 1, 1, 0, 0, 1, 0, 'guardadmin', '2025-06-29 00:49:31', 0, 0, 0),
+(2, 'Nasran 2', '2025-06-28', 1, 0, 1, 1, 0, 0, 'guardadmin', '2025-06-29 00:49:43', 0, 0, 0),
+(3, 'nasran', '2025-06-29', 0, 1, 1, 0, 1, 0, 'guardadmin', '2025-06-29 00:55:02', 0, 0, 1),
+(4, 'nasran84646', '2025-06-29', 1, 0, 0, 1, 0, 0, 'guardadmin', '2025-06-29 00:55:29', 0, 0, 0),
+(5, '12321321', '2025-06-29', 1, 1, 0, 0, 1, 0, 'guardadmin', '2025-06-29 01:17:49', 1, 0, 0);
 
 --
 -- Indexes for dumped tables
@@ -251,6 +313,12 @@ ALTER TABLE `staff_meals`
   ADD UNIQUE KEY `unique_meal` (`staff_id`,`meal_date`);
 
 --
+-- Indexes for table `visitor_orders`
+--
+ALTER TABLE `visitor_orders`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -258,7 +326,7 @@ ALTER TABLE `staff_meals`
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `extra_meal_issues`
@@ -288,7 +356,7 @@ ALTER TABLE `meal_issuance`
 -- AUTO_INCREMENT for table `meal_issuance_log`
 --
 ALTER TABLE `meal_issuance_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `order_pins`
@@ -300,13 +368,19 @@ ALTER TABLE `order_pins`
 -- AUTO_INCREMENT for table `staff`
 --
 ALTER TABLE `staff`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `staff_meals`
 --
 ALTER TABLE `staff_meals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `visitor_orders`
+--
+ALTER TABLE `visitor_orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables

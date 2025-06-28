@@ -7,13 +7,13 @@ $dayOfWeek = date("l");
 
 // Sinhala day names
 $sinhalaDays = [
-    "Monday" => "සදුදා",
-    "Tuesday" => "අඟහරුවාදා",
-    "Wednesday" => "බදාදා",
-    "Thursday" => "බ්‍රහස්පතින්දා",
-    "Friday" => "සිකුරාදා",
-    "Saturday" => "සෙනසුරාදා",
-    "Sunday" => "ඉරිදා"
+  "Monday" => "සදුදා",
+  "Tuesday" => "අඟහරුවාදා",
+  "Wednesday" => "බදාදා",
+  "Thursday" => "බ්‍රහස්පතින්දා",
+  "Friday" => "සිකුරාදා",
+  "Saturday" => "සෙනසුරාදා",
+  "Sunday" => "ඉරිදා"
 ];
 
 $sinhalaDate = $sinhalaDays[$dayOfWeek];
@@ -21,6 +21,7 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Meal Issue Dashboard</title>
@@ -55,13 +56,13 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
     }
   </style>
 </head>
+
 <body class="bg-gray-100 flex flex-col min-h-screen">
 
   <!-- Header -->
   <header class="bg-white shadow py-3 px-4 flex justify-between items-center">
     <div class="text-lg font-bold text-[--primary-blue]">ECW</div>
-    <a href="logout.php"
-       class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-blue-800">
+    <a href="logout.php" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-blue-800">
       Logout
     </a>
   </header>
@@ -78,24 +79,36 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
     <!-- Meal Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Breakfast -->
-      <div onclick="location.href='breakfast/issue_breakfast.php'" class="bg-white border-l-8 border-yellow-400 shadow p-5 rounded-xl transition transform touch-card card-hover">
+      <div onclick="location.href='breakfast/issue_breakfast.php'"
+        class="bg-white border-l-8 border-yellow-400 shadow p-5 rounded-xl transition transform touch-card card-hover">
         <h3 class="text-2xl font-bold text-yellow-600">🍳 Breakfast</h3>
         <p class="text-gray-600 text-lg">උදේ</p>
       </div>
 
       <!-- Lunch -->
-      <div onclick="location.href='lunch/issue_lunch.php'" class="bg-white border-l-8 border-green-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
+      <div onclick="location.href='lunch/issue_lunch.php'"
+        class="bg-white border-l-8 border-green-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
         <h3 class="text-2xl font-bold text-green-600">🍛 Lunch</h3>
         <p class="text-gray-600 text-lg">දවල්</p>
       </div>
 
       <!-- Dinner -->
-      <div onclick="location.href='dinner/issue_dinner.php'" class="bg-white border-l-8 border-blue-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
+      <div onclick="location.href='dinner/issue_dinner.php'"
+        class="bg-white border-l-8 border-blue-500 shadow p-5 rounded-xl transition transform touch-card card-hover">
         <h3 class="text-2xl font-bold text-blue-600">🍽️ Dinner</h3>
         <p class="text-gray-600 text-lg">රෑ</p>
       </div>
+
+      <!-- Visitor -->
+      <div onclick="location.href='visitor/issue_visitor.php'"
+        class="bg-white border-l-8 border-purple-600 shadow p-5 rounded-xl transition transform touch-card card-hover">
+        <h3 class="text-2xl font-bold text-purple-600">🧍 Visitors</h3>
+        <p class="text-gray-600 text-lg">අමුත්තන්</p>
+      </div>
     </div>
   </main>
+
+
 
   <!-- Footer -->
   <?php include 'include/footer.php'; ?>
@@ -114,4 +127,5 @@ $sinhalaDate = $sinhalaDays[$dayOfWeek];
   </script>
 
 </body>
+
 </html>
