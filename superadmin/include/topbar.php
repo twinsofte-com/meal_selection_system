@@ -13,10 +13,10 @@ date_default_timezone_set('Asia/Colombo');
     <div class="flex space-x-4 ml-8">
       <a href="dashboard.php" class="text-[#2E3095] hover:underline font-medium">Dashboard</a>
       <a href="manage_admins.php" class="text-[#2E3095] hover:underline font-medium">Manage Admins</a>
-      <a href="create_admin.php" class="text-[#2E3095] hover:underline font-medium">Create Admin</a>
-      <a href="../pin_manage/order_pin.php" class="text-[#2E3095] hover:underline font-medium">Order PINs</a>
-      <a href="../pin_manage/issue_pin.php" class="text-[#2E3095] hover:underline font-medium">Issue PINs</a>
-      <a href="../admin/download_report.php" class="text-[#2E3095] hover:underline font-medium">Reports</a>
+      <!-- <a href="create_admin.php" class="text-[#2E3095] hover:underline font-medium">Create Admin</a> -->
+      <a href="order_pin.php" class="text-[#2E3095] hover:underline font-medium">Order PINs</a>
+      <a href="issue_pin.php" class="text-[#2E3095] hover:underline font-medium">Issue PINs</a>
+      <a href="staff_list.php" class="text-[#2E3095] hover:underline font-medium">Staff List</a>
     </div>
   </div>
 
