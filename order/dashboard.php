@@ -102,46 +102,69 @@ if (!isset($_SESSION['order_user'])) {
 
   <main class="flex-grow flex flex-col md:flex-row">
     <!-- Left Panel -->
-    <div class="md:w-1/3 w-full bg-white p-4 border-r">
+    <div class="md:w-1/3 w-full bg-white p-4 border-r relative">
+      <!-- QR Camera Preview -->
       <div id="qr-preview-box"
-        class="h-48 w-full border-4 border-dashed border-gray-400 rounded-lg flex items-center justify-center mb-4">
+        class="h-128 w-full border-4 border-dashed border-gray-400 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+
+        <!-- Camera preview -->
         <div id="preview" class="w-full h-full rounded"></div>
+
+        <!-- Employee Info shown at the bottom of the camera box -->
+        <div id="employee-info"
+     class="hidden absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 backdrop-blur-md text-center px-4 py-3 z-10 rounded-t-md md:text-left md:pl-6">
+  
+  <h2 class="text-xl md:text-2xl font-bold text-blue-600 mb-2">Employee Details</h2>
+
+  <p class="text-gray-800 text-base md:text-lg font-semibold">
+    <strong>Name:</strong> <span id="empName">-</span>
+  </p>
+
+  <p class="text-gray-800 text-base md:text-lg font-semibold">
+    <strong>ID:</strong> <span id="empID">-</span>
+  </p>
+
+  <button onclick="resetScan()"
+          class="mt-3 bg-yellow-500 text-white px-6 py-2 rounded-md text-sm md:text-base font-semibold shadow hover:bg-yellow-600">
+    Reset / යළි පරීක්ෂා කරන්න
+  </button>
+</div>
+
       </div>
 
-      <div id="employee-info" class="hidden">
-        <h2 class="text-lg font-bold text-[--primary-blue]">Employee Details</h2>
-        <p class="mt-2 text-gray-800"><strong>Name:</strong> <span id="empName">-</span></p>
-        <p class="text-gray-800"><strong>ID:</strong> <span id="empID">-</span></p>
-        <button onclick="resetScan()" class="mt-3 bg-yellow-500 text-white px-4 py-2 rounded w-full">Reset / යළි පරීක්ෂා
-          කරන්න</button>
-      </div>
-
-      <div class="mt-6 space-y-2">
-        <button onclick="openManualModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded w-full">Forgot Meal
-          Card?</button>
-        <button onclick="openManualModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded w-full">Manual
-          Order</button>
+      <!-- Manual Buttons -->
+      <div class="space-y-2">
+        <button onclick="openManualModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded w-full">
+          Forgot Meal Card?
+        </button>
+        <button onclick="openManualModal()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded w-full">
+          Manual Order
+        </button>
       </div>
     </div>
+
+
 
     <!-- Right Panel -->
     <div class="flex-1 p-6">
       <form action="order_process.php" method="POST" id="orderForm" class="hidden">
         <input type="hidden" name="staff_id" id="staff_id">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
 
-          <!-- LUNCH -->
           <!-- LUNCH -->
           <div class="meal-box">
             <input type="checkbox" id="meal_lunch" name="meals[]" value="2" class="meal-checkbox">
-            <label for="meal_lunch" class="meal-label bg-yellow-100"> <!-- FIXED -->
-              <div class="text-center">
-                <p class="meal-date"><?= date("D d M") ?><br><span class="text-sm">අද</span></p>
-                <h3 class="meal-title">LUNCH</h3>
-                <span class="meal-sub">දහවල්</span>
+            <label for="meal_lunch"
+              class="meal-label bg-yellow-100 text-xl md:text-2xl px-4 py-6 md:py-8 min-h-[260px]">
+              <div class="text-center space-y-2">
+                <p class="meal-date font-medium"><?= date("D d M") ?><br><span class="text-base md:text-lg">අද</span>
+                </p>
+                <h3 class="meal-title font-bold text-2xl md:text-3xl">LUNCH</h3>
+                <span class="meal-sub text-lg md:text-xl">දහවල්</span>
               </div>
-              <div class="checkmark">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="checkmark w-14 h-14 md:w-16 md:h-16 text-white">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                  class="w-8 h-8 md:w-10 md:h-10">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -151,14 +174,17 @@ if (!isset($_SESSION['order_user'])) {
           <!-- DINNER -->
           <div class="meal-box">
             <input type="checkbox" id="meal_dinner" name="meals[]" value="3" class="meal-checkbox">
-            <label for="meal_dinner" class="meal-label bg-orange-100"> <!-- FIXED -->
-              <div class="text-center">
-                <p class="meal-date"><?= date("D d M") ?><br><span class="text-sm">අද</span></p>
-                <h3 class="meal-title">DINNER</h3>
-                <span class="meal-sub">රාත්‍රී</span>
+            <label for="meal_dinner"
+              class="meal-label bg-orange-100 text-xl md:text-2xl px-4 py-6 md:py-8 min-h-[260px]">
+              <div class="text-center space-y-2">
+                <p class="meal-date font-medium"><?= date("D d M") ?><br><span class="text-base md:text-lg">අද</span>
+                </p>
+                <h3 class="meal-title font-bold text-2xl md:text-3xl">DINNER</h3>
+                <span class="meal-sub text-lg md:text-xl">රාත්‍රී</span>
               </div>
-              <div class="checkmark">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="checkmark w-14 h-14 md:w-16 md:h-16 text-white">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                  class="w-8 h-8 md:w-10 md:h-10">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -168,38 +194,45 @@ if (!isset($_SESSION['order_user'])) {
           <!-- BREAKFAST -->
           <div class="meal-box">
             <input type="checkbox" id="meal_breakfast" name="meals[]" value="1" class="meal-checkbox">
-            <label for="meal_breakfast" class="meal-label bg-blue-100"> <!-- FIXED -->
-              <div class="text-center">
-                <p class="meal-date"><?= date("D d M", strtotime("+1 day")) ?><br><span class="text-sm">හෙට</span></p>
-                <h3 class="meal-title">BREAKFAST</h3>
-                <span class="meal-sub">උදේ</span>
+            <label for="meal_breakfast"
+              class="meal-label bg-blue-100 text-xl md:text-2xl px-4 py-6 md:py-8 min-h-[260px]">
+              <div class="text-center space-y-2">
+                <p class="meal-date font-medium"><?= date("D d M", strtotime("+1 day")) ?><br><span
+                    class="text-base md:text-lg">හෙට</span></p>
+                <h3 class="meal-title font-bold text-2xl md:text-3xl">BREAKFAST</h3>
+                <span class="meal-sub text-lg md:text-xl">උදේ</span>
               </div>
-              <div class="checkmark">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <div class="checkmark w-14 h-14 md:w-16 md:h-16 text-white">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                  class="w-8 h-8 md:w-10 md:h-10">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </label>
           </div>
 
+        </div>
 
+
+        <div id="meal-options" class="mt-8 space-y-6 hidden">
+          <label class="flex items-center text-4xl">
+            <input type="radio" name="meal_option" value="egg" class="form-radio text-yellow-500 w-8 h-8">
+            <span class="ml-6 font-extrabold">🥚 Egg</span>
+          </label>
+
+          <label class="flex items-center text-4xl">
+            <input type="radio" name="meal_option" value="chicken" class="form-radio text-red-600 w-8 h-8">
+            <span class="ml-6 font-extrabold">🍗 Chicken</span>
+          </label>
+
+          <label class="flex items-center text-4xl">
+            <input type="radio" name="meal_option" value="vegetarian" class="form-radio text-green-600 w-8 h-8">
+            <span class="ml-6 font-extrabold">🥦 Vegetarian / ශාකාහාරයෙක්ද?</span>
+          </label>
         </div>
-        <div id="meal-options" class="mt-6 space-y-4 hidden">
-          <label class="inline-flex items-center">
-            <input type="radio" name="meal_option" value="egg" class="form-radio text-yellow-500 w-5 h-5">
-            <span class="ml-3 font-semibold text-lg">🥚 Egg</span>
-          </label>
-          <br>
-          <label class="inline-flex items-center">
-            <input type="radio" name="meal_option" value="chicken" class="form-radio text-red-600 w-5 h-5">
-            <span class="ml-3 font-semibold text-lg">🍗 Chicken</span>
-          </label>
-          <br>
-          <label class="inline-flex items-center">
-            <input type="radio" name="meal_option" value="vegetarian" class="form-radio text-green-600 w-5 h-5">
-            <span class="ml-3 font-semibold text-lg">🥦 Vegetarian / ශාකාහාරයෙක්ද?</span>
-          </label>
-        </div>
+
+
+
         <div class="mt-6">
           <button type="submit"
             class="bg-green-500 hover:bg-green-600 text-white w-full py-3 rounded-xl text-xl font-bold">
@@ -260,29 +293,69 @@ if (!isset($_SESSION['order_user'])) {
     let scanner;
     const maxRetries = 3;
     let retryCount = 0;
+    let lastScannedStaffId = null;
 
     function onScanSuccess(decodedText) {
       const qrCode = decodedText.trim();
+
+      // ✅ Auto-submit previous staff order before switching
+      if (lastScannedStaffId && lastScannedStaffId !== "") {
+        autoSubmitOrder(lastScannedStaffId);
+      }
+
       fetch(`get_staff.php?qr_code=${encodeURIComponent(qrCode)}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
+            lastScannedStaffId = data.staff_id; // update current
+
             document.getElementById("staff_id").value = data.staff_id;
             document.getElementById("empID").innerText = data.staff_id;
             document.getElementById("empName").innerText = data.name;
             document.getElementById("employee-info").classList.remove("hidden");
             document.getElementById("orderForm").classList.remove("hidden");
             document.getElementById("reset-btn").classList.remove("hidden");
+
             checkMealPreference(data.staff_id);
           } else {
             alert("Staff not found for this QR code.");
-            handleScanError();
           }
         })
         .catch(() => {
           alert("Error retrieving staff info.");
-          handleScanError();
         });
+    }
+
+    function autoSubmitOrder(staffIdOverride = null) {
+      const form = document.getElementById("orderForm");
+      const formData = new FormData(form);
+
+      // Force override staff_id if passed
+      if (staffIdOverride) {
+        formData.set("staff_id", staffIdOverride);
+      }
+
+      fetch('order_process.php', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.text())
+        .then(result => {
+          console.log("Order saved:", result);
+          toast("Meal order saved!");
+        })
+        .catch(error => {
+          console.error("Order error:", error);
+          toast("Error saving meal order!");
+        });
+    }
+
+    function toast(message) {
+      const div = document.createElement("div");
+      div.textContent = message;
+      div.className = "fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg text-lg z-50";
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 3000);
     }
 
     function confirmManual() {
@@ -295,10 +368,17 @@ if (!isset($_SESSION['order_user'])) {
         return;
       }
 
+      // ✅ Auto-save last scanned before switching
+      if (lastScannedStaffId && lastScannedStaffId !== "") {
+        autoSubmitOrder(lastScannedStaffId);
+      }
+
       fetch(`get_staff.php?staff_id=${fullID}`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
+            lastScannedStaffId = fullID;
+
             document.getElementById("staff_id").value = fullID;
             document.getElementById("empName").innerText = data.name;
             document.getElementById("empID").innerText = fullID;
@@ -317,18 +397,15 @@ if (!isset($_SESSION['order_user'])) {
     }
 
     function checkMealPreference(staffID) {
+      clearSelections(); // reset previous
+
       fetch(`check_meal.php?staff_id=${staffID}`)
         .then(res => res.json())
         .then(response => {
           if (!response.exists) return;
 
-          clearSelections();
-
           const today = response.today || {};
           const tomorrow = response.tomorrow || {};
-
-          document.querySelectorAll('.meal-checkbox').forEach(cb => cb.disabled = false);
-          document.querySelectorAll('input[name="meal_option"]').forEach(rb => rb.disabled = false);
 
           if (today.lunch == 1) {
             document.getElementById("meal_lunch").checked = true;
@@ -351,8 +428,6 @@ if (!isset($_SESSION['order_user'])) {
               radio.checked = true;
             }
           });
-
-          document.getElementById("reset-btn").classList.remove("hidden");
         })
         .catch(() => {
           alert("Error checking meal preference.");
@@ -379,6 +454,7 @@ if (!isset($_SESSION['order_user'])) {
       document.getElementById("reset-btn").classList.add("hidden");
       clearSelections();
       scanner.render(onScanSuccess);
+      lastScannedStaffId = null;
     }
 
     function clearSelections() {
@@ -428,7 +504,6 @@ if (!isset($_SESSION['order_user'])) {
       scanner = new Html5QrcodeScanner("preview", { fps: 10, qrbox: 250 });
       scanner.render(onScanSuccess);
 
-      // Lunch checkbox toggle meal options visibility & required flag
       const lunchCheckbox = document.getElementById("meal_lunch");
       const mealOptions = document.getElementById("meal-options");
 
